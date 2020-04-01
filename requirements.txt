@@ -13,6 +13,7 @@ django-extensions
 django-filter
 django-kronos
 django-middleware-global-request
+django-mptt
 django-openauth
 django-pandas
 django>2,<3

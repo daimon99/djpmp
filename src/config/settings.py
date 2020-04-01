@@ -66,6 +66,7 @@ INSTALLED_APPS = [
 
     'django.contrib.staticfiles',
     'debug_toolbar',
+    'mptt',
 ]
 
 MIDDLEWARE = [
@@ -96,6 +97,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'config.context_processors.footer',
             ],
+            'debug': True
         },
     },
 ]
