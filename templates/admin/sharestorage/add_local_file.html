@@ -1,0 +1,38 @@
+
+
+
+{% extends 'admin/base_site.html' %}
+{% load i18n admin_urls static admin_list %}
+
+
+{% block content %}
+
+    <form action="" method="POST">
+        {% csrf_token %}
+        <div>
+            <fieldset class="module aligned">
+                <div class="form-row">
+                    <div>
+                        <label class="required" for="id_local_file_full_path">
+                            文件路径：
+                        </label>
+                        <input type="text" name="local_file_full_path" style="width: 400px;" required
+                               id="id_local_file_full_path">
+                    </div>
+
+                </div>
+            </fieldset>
+
+
+            <div class="submit-row">
+                <input type="hidden" name="action" value="assign_task"/>
+                <input type="submit" name="apply" value="提交"/>
+                &nbsp
+                <button type="button" name="cancel" onclick="history.back(-1);" class="module">取消</button>
+            </div>
+
+        </div>
+
+    </form>
+
+{% endblock %}

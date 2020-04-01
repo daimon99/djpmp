@@ -1,0 +1,1 @@
+<input onchange="(function(el){el.value=parseFloat(el.value).toFixed(2);})(this)" type="{{ widget.type }}" name="{{ widget.name }}"{% if widget.value != None %} value="{{ widget.value|floatformat:'2' }}"{% endif %}{% include "django/forms/widgets/attrs.html" %}>

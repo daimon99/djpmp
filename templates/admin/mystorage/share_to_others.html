@@ -1,0 +1,64 @@
+{% extends 'admin/base_site.html' %}
+{% load i18n admin_urls static admin_list %}
+
+
+{% block content %}
+
+    <form action="" method="POST">
+        {% csrf_token %}
+        <div>
+            <fieldset class="module aligned">
+                <div class="form-row">
+                    <div>
+                        <label>文件：
+                        </label>
+                        <ul style="list-style-type: none;">
+                            {% for file in file_list %}
+                                <li style="">
+                                    {{ file.file_name }}
+                                    <input type="hidden" name="_selected_action" value="{{ file.pk }}"/>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label class="required" for="id_user_id">
+                            共享给：
+                        </label>
+                        <ul style="list-style-type: none;">
+                            {% for user in users %}
+                                <li style="list-style-type: none;">
+                                    <label>
+                                        <input title="{{ user.username }} ({{ user.firstname }}) " type='checkbox'
+                                               name="user_ids"
+                                               value="{{ user.id }}">
+                                        &nbsp;{{ user.username }}{% if user.firstname %} ({{ user.firstname }}
+                                        ) {% endif %}
+                                    </label>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+            </fieldset>
+
+
+            <div class="submit-row">
+                <input type="hidden" name="action" value="share_to_others_view"/>
+                <input type="submit" name="apply" value="提交"/> &nbsp
+                <button type="button" name="cancel" onclick="history.back(-1);" class="module">取消</button>
+            </div>
+
+        </div>
+
+    </form>
+
+{% endblock %}
+
+
+
+
+

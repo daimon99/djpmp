@@ -1,0 +1,8 @@
+/.env
+/.git/
+/.idea/
+/db.sqlite3
+/logs/*.log
+/src/config/config.py
+/staticfiles/
+/uploads/
