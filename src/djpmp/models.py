@@ -34,6 +34,7 @@ class WBS(TimeStampedModel, MPTTModel):
     def __str__(self):
         return f'{self.code or "-"} {self.name}'
 
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name='项目')
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=16, blank=True, null=True)
     parent = TreeForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='children')

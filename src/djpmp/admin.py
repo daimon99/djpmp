@@ -32,7 +32,7 @@ class WBSAdmin(DraggableMPTTAdmin):
         'spi',
         'created',
     )
-    list_filter = (IsLeafFilter, 'level', 'created', 'modified', ('parent', TreeRelatedFieldListFilter),)
+    list_filter = ('project', IsLeafFilter, 'level', 'created', 'modified', ('parent', TreeRelatedFieldListFilter))
     search_fields = ('name',)
     list_editable = ('pv',)
     ordering = ('tree_id', 'lft')
