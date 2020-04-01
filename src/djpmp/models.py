@@ -65,4 +65,8 @@ class HRCalendar(TimeStampedModel):
 
     def save(self, **kwargs):
         self.tasks_memo = ' / '.join([str(i) for i in self.tasks.all()])
+        tasks = self.tasks.all()
+        # ev_total = self.ev
+        # for task in tasks:
+
         return super().save(**kwargs)

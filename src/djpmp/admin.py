@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+from functools import reduce
 
 from django.contrib import admin
+from django.db.models import Sum
 from django.http import HttpResponseRedirect, HttpRequest
 from django.shortcuts import render
 from django.urls import reverse, path
@@ -35,7 +37,25 @@ class WBSAdmin(DraggableMPTTAdmin):
     search_fields = ('name',)
     list_editable = ('pv', 'ev')
     ordering = ('tree_id', 'lft')
-    actions = ['do_batch_update_parent', 'do_batch_update_code', 'do_clear_parent']
+    actions = ['do_batch_update_parent', 'do_batch_update_code', 'do_calc']
+
+    @property
+    def total_pv(self):
+        # functions to calculate whatever you want...
+        total = m.WBS.objects.filter(children__isnull=True).aggregate(tot=Sum('pv'))['tot']
+        return total
+
+    @property
+    def total_ev(self):
+        # functions to calculate whatever you want...
+        total = m.WBS.objects.filter(children__isnull=True).aggregate(tot=Sum('ev'))['tot']
+        return total
+
+    def changelist_view(self, request, *args, **kwargs):
+        extra = {
+            'total_pv': self.total_pv
+        }
+        return super().changelist_view(request, extra_context=extra)
 
     def do_batch_update_parent(self, request, qs):
         """批量更新父任务"""
@@ -51,8 +71,9 @@ class WBSAdmin(DraggableMPTTAdmin):
             'tasks': m.WBS.objects.all(),
             'task_selected': qs
         }
-
         return render(request, 'admin/djpmp/wbs/batch-update-parent.html', context=context)
+
+    do_batch_update_parent.short_description = '批量指定父任务'
 
     def do_batch_update_code(self, request, qs):
         """批量生成code"""
@@ -65,11 +86,17 @@ class WBSAdmin(DraggableMPTTAdmin):
             set_index(root)
         self.message_user(request, '编码更新成功')
 
-    def do_clear_parent(self, req, qs):
+    do_batch_update_code.short_description = '批量分配编码'
+
+    def do_calc(self, req, qs):
         for i in qs:
-            i.parent = None
-            i.save()
-        self.message_user(req, '清空成功')
+            i: m.WBS
+            if not i.is_leaf_node():
+                i.pv = reduce(lambda x, y: x + y.pv, i.get_leafnodes(), 0)
+                i.save()
+        self.message_user(req, 'WBS计算成功')
+
+    do_calc.short_description = '计算'
 
 
 def set_index(parent: m.WBS):
