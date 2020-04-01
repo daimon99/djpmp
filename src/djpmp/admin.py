@@ -57,14 +57,10 @@ class WBSAdmin(admin.ModelAdmin):
         roots = m.WBS.objects.filter(parent__isnull=True).order_by('pk').all()
         next_index = 1
         for root in roots:
-            if root.code:
-                next_index = int(root.code)
-                set_index(root)
-            else:
-                next_index += 1
-                root.code = f'{next_index}'
-                root.save()
-                set_index(root)
+            root.code = f'{next_index}'
+            root.save()
+            next_index += 1
+            set_index(root)
         self.message_user(request, '编码更新成功')
 
     def do_clear_parent(self, req, qs):
@@ -75,14 +71,12 @@ class WBSAdmin(admin.ModelAdmin):
 
 
 def set_index(parent: m.WBS):
-    print('处理节点：', parent.name)
     next_index = 1
     for child in parent.get_children().order_by('pk').all():
         if child.is_root_node():
             child.code = f'{next_index}'
         else:
             child.code = f'{child.parent.code}.{next_index}'
-        print(f'设置 {child.name} code 为：{child.code}')
         child.save()
         next_index += 1
         if child.is_leaf_node():

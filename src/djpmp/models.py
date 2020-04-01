@@ -27,9 +27,9 @@ class WBS(TimeStampedModel, MPTTModel):
     pv = models.FloatField(default=0)
     ev = models.FloatField(default=0)
 
-    class MPTTMeta:
-        order_insertion_by = ['code', 'id']
-        parent_attr = 'parent'
+    # class MPTTMeta:
+        # order_insertion_by = ['code', 'id']
+        # parent_attr = 'parent'
 
 
 class Staff(TimeStampedModel):
