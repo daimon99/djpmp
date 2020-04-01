@@ -10,6 +10,9 @@ def generate_choices(*choices):
 
 
 class Project(TimeStampedModel):
+    class Meta:
+        verbose_name = verbose_name_plural = '项目'
+
     def __str__(self):
         return self.name
 
@@ -18,6 +21,14 @@ class Project(TimeStampedModel):
 
 
 class WBS(TimeStampedModel, MPTTModel):
+    class Meta:
+        verbose_name = verbose_name_plural = 'WBS'
+        ordering = ('tree_id', 'lft')
+
+    class MPTTMeta:
+        order_insertion_by = ['code', 'name']
+        parent_attr = 'parent'
+
     def __str__(self):
         return self.name
 
@@ -27,12 +38,11 @@ class WBS(TimeStampedModel, MPTTModel):
     pv = models.FloatField(default=0)
     ev = models.FloatField(default=0)
 
-    class MPTTMeta:
-        order_insertion_by = ['code', 'name']
-        parent_attr = 'parent'
-
 
 class Staff(TimeStampedModel):
+    class Meta:
+        verbose_name = verbose_name_plural = '成员'
+
     def __str__(self):
         return self.name
 
@@ -40,8 +50,12 @@ class Staff(TimeStampedModel):
 
 
 class HRCalendar(TimeStampedModel):
+    class Meta:
+        verbose_name = verbose_name_plural = '资源日历'
+        unique_together = ('work_date', 'staff')
+
     def __str__(self):
-        return self.work_date
+        return self.work_date.strftime('%Y-%m-%d')
 
     work_date = models.DateField()
     staff = models.ForeignKey(Staff, on_delete=models.CASCADE)

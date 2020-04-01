@@ -3,8 +3,8 @@
 from django.contrib import admin
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from django.urls import reverse
-
+from django.urls import reverse, path
+from . import forms
 from . import models as m
 from .filters import IsLeafFilter
 from .models import Project, WBS, Staff, HRCalendar
@@ -25,14 +25,11 @@ class WBSAdmin(DraggableMPTTAdmin):
     list_display = (
         'tree_actions',
         'indented_title',
-        'id',
         'code',
-        'level',
         'name',
         'pv',
         'ev',
         'created',
-        'modified',
     )
     list_filter = (IsLeafFilter, 'level', 'created', 'modified', ('parent', TreeRelatedFieldListFilter),)
     search_fields = ('name',)
@@ -97,8 +94,47 @@ class StaffAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
+weekday = {
+    0: '星期一',
+    1: '星期二',
+    2: '星期三',
+    3: '星期四',
+    4: '星期五',
+    5: '星期六',
+    6: '星期日'
+}
+
+
 @admin.register(HRCalendar)
 class HRCalendarAdmin(admin.ModelAdmin):
-    list_display = ('id', 'work_date', 'staff', 'ev', 'created', 'modified')
-    list_filter = ('created', 'modified', 'work_date', 'staff')
-    raw_id_fields = ('tasks',)
+    list_display = ('id', '_work_date', 'staff', 'ev')
+    list_filter = ('work_date', 'staff')
+    # raw_id_fields = ('tasks',)
+    list_editable = ('ev',)
+    filter_horizontal = ('tasks',)
+    ordering = ('work_date', 'staff')
+
+    def _work_date(self, obj):
+        return f'{obj.work_date.strftime("%Y年%m月%d日")} {weekday[obj.work_date.weekday()]}'
+
+    def get_urls(self):
+        return [
+                   path('batch-create/', self.admin_site.admin_view(self.view_batch_create),
+                        name='djpmp_hrcalendar_batch-create')
+               ] + super().get_urls()
+
+    def view_batch_create(self, request):
+        """批量创建资源日历"""
+        if request.method == 'POST':
+            form = forms.DateSpanForm(request.POST)
+            if form.is_valid():
+                form.save()
+                self.message_user(request, f'批量创建日历成功!')
+                return HttpResponseRedirect(reverse('admin:djpmp_hrcalendar_changelist'))
+        else:
+            form = forms.DateSpanForm()
+        context = {
+            'title': '批量创建资源日历',
+            'form': form,
+        }
+        return render(request, 'admin/djpmp/hrcalendar/batch-update-parent.html', context=context)

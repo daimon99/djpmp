@@ -38,7 +38,9 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'djpmp',
+
     # 'simpleui',
+    'formadmin',
 
     'django_dj_plugin',
     'django_bestzhlocale',
@@ -66,6 +68,7 @@ INSTALLED_APPS = [
 
     'django.contrib.staticfiles',
     'debug_toolbar',
+
     'mptt',
 ]
 
@@ -83,7 +86,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'config.urls'
-
+# FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

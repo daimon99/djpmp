@@ -1,33 +1,21 @@
-"""tjccconfig URL Configuration
+import logging
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/2.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.conf import settings
 from django.contrib import admin
-from django.contrib.auth.decorators import login_required
+from django.contrib.admin import site
 from django.contrib.auth.models import User
 from django.http import HttpRequest, HttpResponseForbidden
-from django.shortcuts import redirect
 from django.urls import path, include
 from django.views.static import serve
+from django_dj_plugin.utils import get_real_ip
 from rest_framework.documentation import include_docs_urls
 from rest_framework_jwt.views import obtain_jwt_token, verify_jwt_token, refresh_jwt_token
-from django.core.cache import cache
-import logging
-import sentry_sdk
-from django_dj_plugin.utils import get_real_ip
 
+header_name = '项目成本估算'
+site.site_header = header_name
+site.site_title = header_name
+site.index_title = '首页'
+site.site_url = None
 log = logging.getLogger(__name__)
 
 # 如果要对菜单排序，参考下面代码：
