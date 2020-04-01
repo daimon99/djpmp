@@ -39,3 +39,18 @@ from django.db.models import Q
 #             return qs.filter(
 #                 Q(sentence_id=sentence_id)
 #             )
+
+class IsLeafFilter(admin.SimpleListFilter):
+    title = '叶子节点'
+    parameter_name = 'is_leaf'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('1', '是'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == '1':
+            print('--->')
+            return queryset.filter(children__isnull=True)
+

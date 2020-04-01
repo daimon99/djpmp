@@ -6,7 +6,11 @@ from django.shortcuts import render
 from django.urls import reverse
 
 from . import models as m
+from .filters import IsLeafFilter
 from .models import Project, WBS, Staff, HRCalendar
+
+from mptt.admin import DraggableMPTTAdmin
+from mptt.admin import TreeRelatedFieldListFilter
 
 
 @admin.register(Project)
@@ -17,22 +21,23 @@ class ProjectAdmin(admin.ModelAdmin):
 
 
 @admin.register(WBS)
-class WBSAdmin(admin.ModelAdmin):
+class WBSAdmin(DraggableMPTTAdmin):
     list_display = (
+        'tree_actions',
+        'indented_title',
         'id',
         'code',
         'level',
         'name',
-        'parent',
         'pv',
         'ev',
         'created',
         'modified',
     )
-    list_filter = ('level', 'created', 'modified', 'parent',)
+    list_filter = (IsLeafFilter, 'level', 'created', 'modified', ('parent', TreeRelatedFieldListFilter),)
     search_fields = ('name',)
-    list_editable = ('parent', 'pv', 'ev')
-    ordering = ('created',)
+    list_editable = ('pv', 'ev')
+    ordering = ('tree_id', 'lft')
     actions = ['do_batch_update_parent', 'do_batch_update_code', 'do_clear_parent']
 
     def do_batch_update_parent(self, request, qs):
