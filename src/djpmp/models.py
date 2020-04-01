@@ -1,4 +1,6 @@
 # coding: utf-8
+from functools import reduce
+
 from django.contrib.auth.models import User
 from django.db import models
 from django_extensions.db.models import TimeStampedModel
@@ -65,8 +67,4 @@ class HRCalendar(TimeStampedModel):
 
     def save(self, **kwargs):
         self.tasks_memo = ' / '.join([str(i) for i in self.tasks.all()])
-        tasks = self.tasks.all()
-        # ev_total = self.ev
-        # for task in tasks:
-
         return super().save(**kwargs)
