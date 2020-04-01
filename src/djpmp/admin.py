@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.contrib import admin
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpRequest
 from django.shortcuts import render
 from django.urls import reverse, path
 from . import forms
@@ -107,12 +107,15 @@ weekday = {
 
 @admin.register(HRCalendar)
 class HRCalendarAdmin(admin.ModelAdmin):
-    list_display = ('id', '_work_date', 'staff', 'ev')
+    list_display = ('id', '_work_date', 'staff', 'ev', 'tasks_memo')
     list_filter = ('work_date', 'staff')
     # raw_id_fields = ('tasks',)
     list_editable = ('ev',)
     filter_horizontal = ('tasks',)
     ordering = ('work_date', 'staff')
+    actions = ['do_batch_assign_wbs', 'do_calc']
+    list_select_related = ['staff']
+    readonly_fields = ['tasks_memo']
 
     def _work_date(self, obj):
         return f'{obj.work_date.strftime("%Y年%m月%d日")} {weekday[obj.work_date.weekday()]}'
@@ -138,3 +141,30 @@ class HRCalendarAdmin(admin.ModelAdmin):
             'form': form,
         }
         return render(request, 'admin/djpmp/hrcalendar/batch-update-parent.html', context=context)
+
+    def do_batch_assign_wbs(self, request: HttpRequest, qs):
+        """批量指派wbs"""
+        if 'apply' in request.POST:
+            wbs_list = request.POST.getlist('wbs_list')
+            for i in qs:
+                i: m.HRCalendar
+                for wbs_id in wbs_list:
+                    i.tasks.add(m.WBS.objects.get(pk=wbs_id))
+            self.message_user(request, f'任务增加成功')
+            return HttpResponseRedirect(request.build_absolute_uri())
+        context = {
+            'title': '选择要指派的任务',
+            'selected': qs,
+            'wbs': m.WBS.objects.all()
+        }
+        return render(request, 'admin/djpmp/hrcalendar/batch-assign-wbs.html', context=context)
+
+    do_batch_assign_wbs.short_description = '分配WBS'
+
+    def do_calc(self, req, qs):
+        for i in qs:
+            i.save()
+
+        self.message_user(req, '计算完毕')
+
+    do_calc.short_description = '计算'

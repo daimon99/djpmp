@@ -29,10 +29,10 @@
                             <h3>父级任务设置为：</h3>
                         </label>
                         <ul style="list-style-type: none;">
-                            {% recursetree tasks %}
+                            {% recursetree wbs %}
                                 <li style="list-style-type: none">
                                     <label>
-                                        <input type="radio" id="parent_id" name="parent_id" value="{{ node.pk }}">
+                                        <input type="checkbox" id="wbs_list" name="wbs_list" value="{{ node.pk }}">
                                         &nbsp; {{ node.name }}
                                     </label>
 

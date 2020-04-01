@@ -1,0 +1,71 @@
+{% extends 'admin/base_site.html' %}
+{% load i18n admin_urls static admin_list %}
+{% load mptt_tags %}
+{% load formadmin_filters %}
+{% block extrastyle %}
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">
+
+{% endblock %}
+{% block content %}
+
+    <form action="" method="post">
+        {% csrf_token %}
+
+        <fieldset class="module aligned">
+            <div class="form-row">
+                <div>
+                    <label>
+                        <h3>以下资源日历：</h3>
+                    </label>
+                    <ul style="list-style-type: none;">
+                        {% for item in selected %}
+                            <li style="">
+                                {{ item }}
+                                <input type="hidden" name="_selected_action" value="{{ item.pk }}"/>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label class="required" for="parent_id">
+                        <h3>分配给WBS：</h3>
+                    </label>
+                    <ul style="list-style-type: none;">
+                        {% recursetree wbs %}
+                            <li style="list-style-type: none">
+                                <label>
+                                    <input type="checkbox" id="wbs_list" name="wbs_list" value="{{ node.pk }}">
+                                    &nbsp; {{ node }}
+                                </label>
+
+                                {% if not node.is_leaf_node %}
+                                    <hr/>
+                                    <ul class="children" style="list-style-type: none;">
+
+                                        {{ children }}
+                                    </ul>
+                                {% endif %}
+                            </li>
+                        {% endrecursetree %}
+                    </ul>
+                </div>
+            </div>
+
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="hidden" name="action" value="do_batch_assign_wbs"/>
+            <input type="submit" name="apply" value="提交"/> &nbsp
+            <a href="#" onclick="history.back(-1);" class="closelink">取消</a>
+
+        </div>
+    </form>
+
+{% endblock %}
+
+
+
+
+

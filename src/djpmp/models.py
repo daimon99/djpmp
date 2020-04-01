@@ -30,7 +30,7 @@ class WBS(TimeStampedModel, MPTTModel):
         parent_attr = 'parent'
 
     def __str__(self):
-        return self.name
+        return f'{self.code or "-"} {self.name}'
 
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=16, blank=True, null=True)
@@ -55,9 +55,14 @@ class HRCalendar(TimeStampedModel):
         unique_together = ('work_date', 'staff')
 
     def __str__(self):
-        return self.work_date.strftime('%Y-%m-%d')
+        return f"{self.work_date.strftime('%Y-%m-%d')}-{self.staff}"
 
     work_date = models.DateField()
     staff = models.ForeignKey(Staff, on_delete=models.CASCADE)
     ev = models.FloatField(default=0)
     tasks = models.ManyToManyField(WBS, blank=True)
+    tasks_memo = models.CharField(max_length=512, blank=True, null=True, verbose_name='任务说明')
+
+    def save(self, **kwargs):
+        self.tasks_memo = ' / '.join([str(i) for i in self.tasks.all()])
+        return super().save(**kwargs)
