@@ -18,3 +18,13 @@ from djpmp import models as m
 #         fields = ['id', 'project']
 #
 #     project = ProjectSerializer()
+class HRCalendarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = m.Project
+        fields = '__all__'
+
+
+class WBSSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = m.WBS
+        fields = '__all__'
