@@ -104,7 +104,7 @@ class WBSAdmin(DraggableMPTTAdmin):
                 i.save()
         self.message_user(req, 'WBS计算成功')
 
-    do_calc.short_description = '计算'
+    do_calc.short_description = '计算父节点PV'
 
     def do_pv_clear(self, req, qs):
         qs.update(pv=0)
