@@ -11,6 +11,7 @@ django-dj-plugin>=0.3.0
 django-environ
 django-extensions
 django-filter
+django-form-admin
 django-kronos
 django-middleware-global-request
 django-mptt
