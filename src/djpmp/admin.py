@@ -22,6 +22,7 @@ class ProjectAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     readonly_fields = ['pv_rmb', 'ev_rmb', 'ac_rmb']
     actions = ['do_balance', ]
+    list_display_links = ('id', 'name')
 
     def do_balance(self, req, qs):
         for i in qs:
@@ -180,6 +181,7 @@ class StaffAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'man_day_price', 'created', 'modified')
     list_filter = ('created', 'modified')
     search_fields = ('name',)
+    list_display_links = ('id', 'name')
 
 
 weekday = {
@@ -204,6 +206,7 @@ class HRCalendarAdmin(admin.ModelAdmin):
     actions = ['do_batch_assign_wbs', 'do_calc']
     list_select_related = ['staff']
     readonly_fields = ['tasks_memo']
+    list_display_links = ('id', '_work_date')
 
     def _work_date(self, obj):
         return f'{obj.work_date.strftime("%Y年%m月%d日")} {weekday[obj.work_date.weekday()]}'
