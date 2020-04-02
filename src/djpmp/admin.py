@@ -6,13 +6,13 @@ from django.db.models import Sum
 from django.http import HttpResponseRedirect, HttpRequest
 from django.shortcuts import render
 from django.urls import reverse, path
+from mptt.admin import DraggableMPTTAdmin
+from mptt.admin import TreeRelatedFieldListFilter
+
 from . import forms
 from . import models as m
 from .filters import IsLeafFilter
 from .models import Project, WBS, Staff, HRCalendar
-
-from mptt.admin import DraggableMPTTAdmin
-from mptt.admin import TreeRelatedFieldListFilter
 
 
 @admin.register(Project)
@@ -42,22 +42,33 @@ class WBSAdmin(DraggableMPTTAdmin):
     @property
     def total_pv(self):
         # functions to calculate whatever you want...
-        total = m.WBS.objects.filter(children__isnull=True).aggregate(tot=Sum('pv'))['tot']
-        return round(total, 2)
+        try:
+            total = m.WBS.objects.filter(children__isnull=True).aggregate(tot=Sum('pv'))['tot']
+            return round(total, 2)
+        except:
+            pass
 
     @property
     def total_ev(self):
-        # functions to calculate whatever you want...
-        total = m.WBS.objects.filter(children__isnull=True).aggregate(tot=Sum('ev'))['tot']
-        return round(total, 2)
+        try:
+            total = m.WBS.objects.filter(children__isnull=True).aggregate(tot=Sum('ev'))['tot']
+            return round(total, 2)
+        except:
+            pass
 
     @property
     def total_spi(self):
-        spi = f'{round(self.total_ev / self.total_pv * 100, 2)}%'
-        return spi
+        try:
+            spi = f'{round(self.total_ev / self.total_pv * 100, 2)}%'
+            return spi
+        except:
+            pass
 
     def spi(self, obj):
-        return f'{round(obj.ev / obj.pv * 100, 2)}%'
+        try:
+            return f'{round(obj.ev / obj.pv * 100, 2)}%'
+        except:
+            pass
 
     def changelist_view(self, request, *args, **kwargs):
         extra = {
