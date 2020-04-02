@@ -17,9 +17,39 @@ from .models import Project, WBS, Staff, HRCalendar
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'user', 'created', 'modified',)
+    list_display = ('id', 'name', 'user', 'pv_rmb', 'ev_rmb', 'ac_rmb', 'created',)
     list_filter = ('created', 'modified', 'user')
     search_fields = ('name',)
+    readonly_fields = ['pv_rmb', 'ev_rmb', 'ac_rmb']
+    actions = ['do_balance', ]
+
+    def do_balance(self, req, qs):
+        for i in qs:
+            i: Project
+            man_day_price_avg = i.man_day_price_avg
+            pv_rmb = 0.
+            ev_rmb = 0.
+            ac_rmb = 0.
+            for task in i.wbs_set.all():
+                if not task.is_leaf_node():
+                    continue
+                pv_rmb += man_day_price_avg * task.pv
+                ev_rmb += man_day_price_avg * task.ev
+            work_day_done = set()
+            for work_day in m.HRCalendar.objects.filter(tasks__project=i).select_related('staff').all():
+                print(
+                    f'{work_day}: work_day.ev={work_day.ev}, work_day.staff.man_day_price={work_day.staff.man_day_price}')
+                if work_day.id not in work_day_done:
+                    ac_rmb += work_day.ev * work_day.staff.man_day_price
+                    work_day_done.add(work_day.id)
+
+            i.pv_rmb = round(pv_rmb, 2)
+            i.ev_rmb = round(ev_rmb, 2)
+            i.ac_rmb = round(ac_rmb, 2)
+            i.save()
+            self.message_user(req, f'项目: {i} 试算完成')
+
+    do_balance.short_description = '项目成本试算'
 
 
 @admin.register(WBS)
@@ -38,6 +68,7 @@ class WBSAdmin(DraggableMPTTAdmin):
     ordering = ('tree_id', 'lft')
     actions = ['do_batch_update_parent', 'do_batch_update_code', 'do_calc', 'do_pv_clear']
     readonly_fields = ['ev']
+    exclude = ['pv_ymb', 'ev_ymb', 'ac_ymb']
 
     @property
     def total_pv(self):

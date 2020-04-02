@@ -1,5 +1,4 @@
 # coding: utf-8
-from functools import reduce
 
 from django.contrib.auth.models import User
 from django.db import models
@@ -20,6 +19,10 @@ class Project(TimeStampedModel):
 
     name = models.CharField(max_length=128)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    man_day_price_avg = models.FloatField(verbose_name='平均人天单价', help_text='单位：元', default=0)
+    ac_rmb = models.FloatField(verbose_name='ac', help_text='单位：元', default=0)
+    pv_rmb = models.FloatField(verbose_name='pv', help_text='单位：元', default=0)
+    ev_rmb = models.FloatField(verbose_name='ev', help_text='单位：元', default=0)
 
 
 class WBS(TimeStampedModel, MPTTModel):
@@ -38,8 +41,11 @@ class WBS(TimeStampedModel, MPTTModel):
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=16, blank=True, null=True)
     parent = TreeForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='children')
-    pv = models.FloatField(default=0)
-    ev = models.FloatField(default=0)
+    pv = models.FloatField(default=0, help_text="计划价值，单元人天")
+    ev = models.FloatField(default=0, help_text="挣值，单位人天")
+    ac_ymb = models.FloatField(default=0, help_text='实际成本，单位元')
+    pv_ymb = models.FloatField(default=0, help_text='计划价值，单位元')
+    ev_ymb = models.FloatField(default=0, help_text='完工价值，单位元')
 
 
 class Staff(TimeStampedModel):
@@ -50,6 +56,7 @@ class Staff(TimeStampedModel):
         return self.name
 
     name = models.CharField(max_length=128)
+    man_day_price = models.FloatField(verbose_name='人天单价', default=0)
 
 
 class HRCalendar(TimeStampedModel):
