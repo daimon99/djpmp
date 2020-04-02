@@ -24,12 +24,15 @@ def get_user_projects(user: User):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'group', 'pv_rmb', 'ev_rmb', 'ac_rmb', 'created',)
-    list_filter = ('created', 'modified')
+    list_display = ('id', 'name', 'status', 'group', 'pv_rmb', 'ev_rmb', 'ac_rmb', 'created',)
+    list_filter = ('status', 'created', 'modified')
     search_fields = ('name',)
     readonly_fields = ['pv_rmb', 'ev_rmb', 'ac_rmb']
     actions = ['do_balance', ]
     list_display_links = ('id', 'name')
+    radio_fields = {
+        'status': admin.HORIZONTAL
+    }
 
     def get_queryset(self, request):
         user = request.user

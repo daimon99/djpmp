@@ -38,6 +38,11 @@ class Project(TimeStampedModel):
     ev_rmb = models.FloatField(verbose_name='ev', help_text='单位：元', default=0)
     group = models.ForeignKey(Group, blank=True, null=True, verbose_name='权限组', on_delete=models.SET_NULL,
                               help_text='在此组中的用户可以浏览此项目信息')
+    status = models.CharField(verbose_name='状态', max_length=64, choices=(
+        ('未开始', '未开始'),
+        ('进行中', '进行中'),
+        ('完成', '完成')
+    ), default='进行中')
 
 
 class WBS(TimeStampedModel, MPTTModel):
