@@ -50,6 +50,7 @@ class ProjectAdmin(admin.ModelAdmin):
             self.message_user(req, f'项目: {i} 试算完成')
 
     do_balance.short_description = '项目成本试算'
+    do_balance.allowed_permissions = ['change', ]
 
 
 @admin.register(WBS)
@@ -124,6 +125,7 @@ class WBSAdmin(DraggableMPTTAdmin):
         return render(request, 'admin/djpmp/wbs/batch-update-parent.html', context=context)
 
     do_batch_update_parent.short_description = '批量指定父任务'
+    do_batch_update_parent.allowed_permissions = ['change', ]
 
     def do_batch_update_code(self, request, qs):
         """批量生成code"""
@@ -137,6 +139,7 @@ class WBSAdmin(DraggableMPTTAdmin):
         self.message_user(request, '编码更新成功')
 
     do_batch_update_code.short_description = '批量分配编码'
+    do_batch_update_code.allowed_permissions = ['change', ]
 
     def do_calc(self, req, qs):
         for i in qs:
@@ -147,12 +150,14 @@ class WBSAdmin(DraggableMPTTAdmin):
         self.message_user(req, 'WBS计算成功')
 
     do_calc.short_description = '计算父节点PV'
+    do_calc.allowed_permissions = ['change', ]
 
     def do_pv_clear(self, req, qs):
         qs.update(pv=0)
         self.message_user(req, 'pv清零')
 
     do_pv_clear.short_description = 'PV清零'
+    do_pv_clear.allowed_permissions = ['change', ]
 
 
 def set_index(parent: m.WBS):
@@ -243,6 +248,7 @@ class HRCalendarAdmin(admin.ModelAdmin):
         return render(request, 'admin/djpmp/hrcalendar/batch-assign-wbs.html', context=context)
 
     do_batch_assign_wbs.short_description = '分配WBS'
+    do_batch_assign_wbs.allowed_permissions = ['change', ]
 
     def do_calc(self, req, qs):
         # 赋值 tasks_memo
@@ -299,3 +305,4 @@ class HRCalendarAdmin(admin.ModelAdmin):
         self.message_user(req, '计算完毕')
 
     do_calc.short_description = '计算挣值'
+    do_calc.allowed_permissions = ['change', ]
