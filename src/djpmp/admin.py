@@ -2,6 +2,8 @@
 from functools import reduce
 
 from django.contrib import admin
+from django.contrib.auth.models import User
+from django.core.exceptions import PermissionDenied
 from django.db.models import Sum
 from django.http import HttpResponseRedirect, HttpRequest
 from django.shortcuts import render
@@ -15,14 +17,26 @@ from .filters import IsLeafFilter
 from .models import Project, WBS, Staff, HRCalendar
 
 
+def get_user_projects(user: User):
+    projects = m.Project.objects.filter(group__in=user.groups.all()).all()
+    return projects
+
+
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'user', 'pv_rmb', 'ev_rmb', 'ac_rmb', 'created',)
-    list_filter = ('created', 'modified', 'user')
+    list_display = ('id', 'name', 'group', 'pv_rmb', 'ev_rmb', 'ac_rmb', 'created',)
+    list_filter = ('created', 'modified')
     search_fields = ('name',)
     readonly_fields = ['pv_rmb', 'ev_rmb', 'ac_rmb']
     actions = ['do_balance', ]
     list_display_links = ('id', 'name')
+
+    def get_queryset(self, request):
+        user = request.user
+        qs = super().get_queryset(request)
+        if not user.is_superuser:
+            qs = get_user_projects(user)
+        return qs
 
     def do_balance(self, req, qs):
         for i in qs:
@@ -72,11 +86,18 @@ class WBSAdmin(DraggableMPTTAdmin):
     readonly_fields = ['ev']
     exclude = ['pv_ymb', 'ev_ymb', 'ac_ymb']
 
+    def get_queryset(self, request):
+        user = request.user
+        qs = super().get_queryset(request)
+        if not user.is_superuser:
+            qs = qs.filter(project__in=get_user_projects(user))
+        return qs
+
     @property
     def total_pv(self):
         # functions to calculate whatever you want...
         try:
-            total = m.WBS.objects.filter(children__isnull=True).aggregate(tot=Sum('pv'))['tot']
+            total = self.get_queryset().filter(children__isnull=True).aggregate(tot=Sum('pv'))['tot']
             return round(total, 2)
         except:
             pass
@@ -102,12 +123,6 @@ class WBSAdmin(DraggableMPTTAdmin):
             return f'{round(obj.ev / obj.pv * 100, 2)}%'
         except:
             pass
-
-    def changelist_view(self, request, *args, **kwargs):
-        extra = {
-            'total_pv': self.total_pv
-        }
-        return super().changelist_view(request, extra_context=extra)
 
     def do_batch_update_parent(self, request, qs):
         """批量更新父任务"""
@@ -179,9 +194,16 @@ def set_index(parent: m.WBS):
 @admin.register(Staff)
 class StaffAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'man_day_price', 'created', 'modified')
-    list_filter = ('created', 'modified')
+    list_filter = ('project', 'created', 'modified')
     search_fields = ('name',)
     list_display_links = ('id', 'name')
+
+    def get_queryset(self, request):
+        user = request.user
+        qs = super().get_queryset(request)
+        if not user.is_superuser:
+            qs = qs.filter(project__in=get_user_projects(user))
+        return qs
 
 
 weekday = {
@@ -198,7 +220,7 @@ weekday = {
 @admin.register(HRCalendar)
 class HRCalendarAdmin(admin.ModelAdmin):
     list_display = ('id', '_work_date', 'staff', 'ev', 'tasks_memo')
-    list_filter = ('work_date', 'staff')
+    list_filter = ('project', 'work_date', 'staff')
     # raw_id_fields = ('tasks',)
     list_editable = ('ev',)
     filter_horizontal = ('tasks',)
@@ -207,6 +229,13 @@ class HRCalendarAdmin(admin.ModelAdmin):
     list_select_related = ['staff']
     readonly_fields = ['tasks_memo']
     list_display_links = ('id', '_work_date')
+
+    def get_queryset(self, request):
+        user = request.user
+        qs = super().get_queryset(request)
+        if not user.is_superuser:
+            qs = qs.filter(project__in=get_user_projects(user))
+        return qs
 
     def _work_date(self, obj):
         return f'{obj.work_date.strftime("%Y年%m月%d日")} {weekday[obj.work_date.weekday()]}'
@@ -219,6 +248,8 @@ class HRCalendarAdmin(admin.ModelAdmin):
 
     def view_batch_create(self, request):
         """批量创建资源日历"""
+        if not self.has_add_permission(request):
+            raise PermissionDenied
         if request.method == 'POST':
             form = forms.DateSpanForm(request.POST)
             if form.is_valid():

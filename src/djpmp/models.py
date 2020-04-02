@@ -1,13 +1,27 @@
 # coding: utf-8
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db import models
+from django.http import HttpRequest
 from django_extensions.db.models import TimeStampedModel
+from django_middleware_global_request.middleware import get_request
 from mptt.models import MPTTModel, TreeForeignKey
 
 
 def generate_choices(*choices):
     return list(zip(choices, choices))
+
+
+def my_projects():
+    request: HttpRequest = get_request()
+    if request and request.user:
+        user = request.user
+        if user.is_superuser:
+            return {}
+        else:
+            return {
+                'group__in': user.groups.all()
+            }
 
 
 class Project(TimeStampedModel):
@@ -18,11 +32,12 @@ class Project(TimeStampedModel):
         return self.name
 
     name = models.CharField(max_length=128)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
     man_day_price_avg = models.FloatField(verbose_name='平均人天单价', help_text='单位：元', default=0)
     ac_rmb = models.FloatField(verbose_name='ac', help_text='单位：元', default=0)
     pv_rmb = models.FloatField(verbose_name='pv', help_text='单位：元', default=0)
     ev_rmb = models.FloatField(verbose_name='ev', help_text='单位：元', default=0)
+    group = models.ForeignKey(Group, blank=True, null=True, verbose_name='权限组', on_delete=models.SET_NULL,
+                              help_text='在此组中的用户可以浏览此项目信息')
 
 
 class WBS(TimeStampedModel, MPTTModel):
@@ -37,7 +52,7 @@ class WBS(TimeStampedModel, MPTTModel):
     def __str__(self):
         return f'{self.code or "-"} {self.name}'
 
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name='项目')
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name='项目', limit_choices_to=my_projects)
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=16, blank=True, null=True)
     parent = TreeForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='children')
@@ -55,6 +70,7 @@ class Staff(TimeStampedModel):
     def __str__(self):
         return self.name
 
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name='项目', limit_choices_to=my_projects)
     name = models.CharField(max_length=128)
     man_day_price = models.FloatField(verbose_name='人天单价', default=0)
 
@@ -62,17 +78,24 @@ class Staff(TimeStampedModel):
 class HRCalendar(TimeStampedModel):
     class Meta:
         verbose_name = verbose_name_plural = '资源日历'
-        unique_together = ('work_date', 'staff')
+        unique_together = ('project', 'work_date', 'staff')
 
     def __str__(self):
         return f"{self.work_date.strftime('%Y-%m-%d')}-{self.staff}"
 
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name='项目', limit_choices_to=my_projects)
     work_date = models.DateField()
     staff = models.ForeignKey(Staff, on_delete=models.CASCADE)
-    ev = models.FloatField(default=0)
+    ev = models.FloatField(default=0, choices=(
+        (0, 0),
+        (0.5, 0.5),
+        (1.5, 1.5),
+        (2, 2)
+    ))
     tasks = models.ManyToManyField(WBS, blank=True)
     tasks_memo = models.CharField(max_length=512, blank=True, null=True, verbose_name='任务说明')
 
     def save(self, **kwargs):
-        self.tasks_memo = ' / '.join([str(i) for i in self.tasks.all()])
+        if self.id:
+            self.tasks_memo = ' / '.join([str(i) for i in self.tasks.all()])
         return super().save(**kwargs)
