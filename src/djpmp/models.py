@@ -78,6 +78,18 @@ class Staff(TimeStampedModel):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name='项目', limit_choices_to=my_projects)
     name = models.CharField(max_length=128)
     man_day_price = models.FloatField(verbose_name='人天单价', default=0)
+    role = models.CharField(max_length=64, verbose_name='角色', choices=(
+        ('后端中级', '后端中级'),
+        ('后端高级', '后端高级'),
+        ('前端中级', '前端中级'),
+        ('前端高级', '前端高级'),
+        ('UI中级', 'UI中级'),
+        ('UI高级', 'UI高级'),
+        ('测试中级', '测试中级'),
+        ('测试高级', '测试高级'),
+        ('产品中级', '产品中级'),
+        ('产品高级', '产品高级'),
+    ), default='后端中级')
 
 
 class HRCalendar(TimeStampedModel):
