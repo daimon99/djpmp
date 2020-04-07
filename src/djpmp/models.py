@@ -104,11 +104,11 @@ class HRCalendar(TimeStampedModel):
     work_date = models.DateField()
     staff = models.ForeignKey(Staff, on_delete=models.CASCADE)
     ev = models.FloatField(default=0, choices=(
-        (0, 0),
+        (0.0, 0.0),
         (0.5, 0.5),
-        (1, 1),
+        (1.0, 1.0),
         (1.5, 1.5),
-        (2, 2)
+        (2.0, 2.0)
     ))
     tasks = models.ManyToManyField(WBS, blank=True)
     tasks_memo = models.CharField(max_length=512, blank=True, null=True, verbose_name='任务说明')
