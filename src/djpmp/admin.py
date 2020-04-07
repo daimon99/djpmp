@@ -275,6 +275,7 @@ class HRCalendarAdmin(admin.ModelAdmin):
                 i: m.HRCalendar
                 for wbs_id in wbs_list:
                     i.tasks.add(m.WBS.objects.get(pk=wbs_id))
+                    i.save()
             self.message_user(request, f'任务增加成功')
             return HttpResponseRedirect(request.build_absolute_uri())
         context = {
