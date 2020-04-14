@@ -15,6 +15,7 @@ from . import forms
 from . import models as m
 from .filters import IsLeafFilter
 from .models import Project, WBS, Staff, HRCalendar
+from .utils import JQUERY_MIN_JS
 
 
 def get_user_projects(user: User):
@@ -68,6 +69,9 @@ class HRCalendarInline(admin.TabularInline):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
+    class Media:
+        js = [JQUERY_MIN_JS, 'admin/js/summary.js', 'admin/djpmp/project/project.js', ]
+
     list_display = ('id', 'name', 'status', 'group', 'pv_rmb', 'ev_rmb', 'ac_rmb', 'created',)
     list_filter = ('status', 'created', 'modified')
     search_fields = ('name',)
@@ -119,6 +123,9 @@ class ProjectAdmin(admin.ModelAdmin):
 
 @admin.register(WBS)
 class WBSAdmin(DraggableMPTTAdmin):
+    class Media:
+        js = (JQUERY_MIN_JS, 'admin/js/summary.js', 'admin/djpmp/wbs/wbs.js')
+
     list_display = (
         'tree_actions',
         'indented_title',
