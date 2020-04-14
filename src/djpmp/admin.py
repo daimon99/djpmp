@@ -266,6 +266,9 @@ class StaffAdmin(admin.ModelAdmin):
 
 @admin.register(HRCalendar)
 class HRCalendarAdmin(admin.ModelAdmin):
+    class Media:
+        js = (JQUERY_MIN_JS, 'admin/js/summary.js', 'admin/djpmp/hrcalendar/hrcalendar.js')
+
     list_display = ('id', '_work_date', 'staff', 'ev', 'tasks_memo')
     list_filter = ('project', 'work_date', 'staff')
     # raw_id_fields = ('tasks',)
