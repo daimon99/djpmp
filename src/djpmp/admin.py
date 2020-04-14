@@ -13,6 +13,7 @@ from mptt.admin import TreeRelatedFieldListFilter
 
 from . import forms
 from . import models as m
+from .biz import core
 from .filters import IsLeafFilter
 from .models import Project, WBS, Staff, HRCalendar
 from .utils import JQUERY_MIN_JS
@@ -92,8 +93,12 @@ class ProjectAdmin(admin.ModelAdmin):
         return qs
 
     def do_balance(self, req, qs):
+
         for i in qs:
             i: Project
+            # 更新项目的 wbs ev
+            core.assign_hr_cost_to_wbs(i.hrcalendar_set.all())
+            # 计算项目的 ac
             man_day_price_avg = i.man_day_price_avg
             pv_rmb = 0.
             ev_rmb = 0.
@@ -334,57 +339,7 @@ class HRCalendarAdmin(admin.ModelAdmin):
     do_batch_assign_wbs.allowed_permissions = ['change', ]
 
     def do_calc(self, req, qs):
-        # 赋值 tasks_memo
-        for i in qs:
-            i.save()
-        # pv按比例分配到wbs上
-        task_calc_started = set()
-        m.WBS.objects.update(ev=0)
-        for calendar in qs:
-            tasks = calendar.tasks.all()
-            total_pv = reduce(lambda x, y: x + y.pv, tasks, 0)
-            for task in tasks:
-                if task.pk not in task_calc_started:
-                    task.ev = 0
-                    task_calc_started.add(task.pk)
-                task.ev += round(calendar.ev * task.pv / total_pv, 2)
-                task.save()
-        # 以下是算法 1 .　不够精细。只能算出顶层 ev
-        if False:
-            # wbs pv 累加
-            for root in m.WBS.objects.root_nodes():
-                root: m.WBS
-                root.ev = reduce(lambda x, y: x + y.ev, root.get_descendants(True), 0)
-                root.save()
-
-        # 算法 1 结束
-        # 算法2，先向下拆，再向上合
-        def go_down(node: m.WBS):
-            if node.ev == 0:
-                if node.is_leaf_node():
-                    return
-                else:
-                    for child in node.get_children():
-                        go_down(child)
-            else:
-                children = node.get_children()
-                total_pv2 = reduce(lambda x, y: x + y.pv, children, 0)
-                for child in children:
-                    child.ev += round(node.ev * child.pv / total_pv2, 2)
-                    child.save()
-                    if child.is_leaf_node():
-                        continue
-                    else:
-                        go_down(child)
-
-        # 自上至下拆分
-        for root in m.WBS.objects.root_nodes():
-            go_down(root)
-        # 自下至上合并
-        for node in m.WBS.objects.filter(children__isnull=False).all():
-            node: m.WBS
-            node.ev = round(reduce(lambda x, y: x + y.ev, node.get_leafnodes(), 0), 2)
-            node.save()
+        core.assign_hr_cost_to_wbs(qs)
         self.message_user(req, '计算完毕')
 
     do_calc.short_description = '计算挣值'
