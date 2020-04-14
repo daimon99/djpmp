@@ -42,11 +42,11 @@ class Project(TimeStampedModel):
     def __str__(self):
         return self.name
 
-    name = models.CharField(max_length=128)
+    name = models.CharField(max_length=128, verbose_name='项目名称')
     man_day_price_avg = models.FloatField(verbose_name='平均人天单价', help_text='单位：元', default=0)
-    ac_rmb = models.FloatField(verbose_name='ac', help_text='单位：元', default=0)
-    pv_rmb = models.FloatField(verbose_name='pv', help_text='单位：元', default=0)
-    ev_rmb = models.FloatField(verbose_name='ev', help_text='单位：元', default=0)
+    ac_rmb = models.FloatField(verbose_name='AC', help_text='单位：元', default=0)
+    pv_rmb = models.FloatField(verbose_name='PV', help_text='单位：元', default=0)
+    ev_rmb = models.FloatField(verbose_name='EV', help_text='单位：元', default=0)
     group = models.ForeignKey(Group, blank=True, null=True, verbose_name='权限组', on_delete=models.SET_NULL,
                               help_text='在此组中的用户可以浏览此项目信息')
     status = models.CharField(verbose_name='状态', max_length=64, choices=(
