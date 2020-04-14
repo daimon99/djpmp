@@ -2,6 +2,8 @@
 与原版的主要调整：
 1. .inline-group .tabular td.original p
 height 调整为 inherit。原因是在中文状态下，这个 original p 被遮住了
+2. .inline-group .tabular tr.has_original td
+去掉这个样式，目的是不要明细行上的标题
 */
 @import url('widgets.css');
 
@@ -443,7 +445,7 @@ body.popup .submit-row {
 }
 
 .inline-group .tabular tr.has_original td {
-    padding-top: 2em;
+    /*padding-top: 2em;*/
 }
 
 .inline-group .tabular tr td.original {

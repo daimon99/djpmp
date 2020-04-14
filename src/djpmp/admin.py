@@ -22,6 +22,50 @@ def get_user_projects(user: User):
     return projects
 
 
+class StaffInline(admin.TabularInline):
+    model = m.Staff
+    fields = ('name', 'man_day_price', 'role')
+    extra = 0
+
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+class WBSInline(admin.TabularInline):
+    model = m.WBS
+    fields = ('code', 'name', 'pv', 'ev', 'pv_ymb', 'ev_ymb', 'ac_ymb')
+    # readonly_fields = ('ev', 'pv_ymb', 'ev_ymb', 'ac_ymb')
+    # readonly_fields = fields
+
+    ordering = ('code', 'name')
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+class HRCalendarInline(admin.TabularInline):
+    model = m.HRCalendar
+    fields = ['_work_date', 'staff', 'ev', 'tasks_memo']
+    readonly_fields = fields
+    can_delete = False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'status', 'group', 'pv_rmb', 'ev_rmb', 'ac_rmb', 'created',)
@@ -33,6 +77,8 @@ class ProjectAdmin(admin.ModelAdmin):
     radio_fields = {
         'status': admin.HORIZONTAL
     }
+    inlines = [StaffInline, WBSInline, HRCalendarInline]
+    menu_index = 10
 
     def get_queryset(self, request):
         user = request.user
@@ -88,6 +134,7 @@ class WBSAdmin(DraggableMPTTAdmin):
     actions = ['do_batch_update_parent', 'do_batch_update_code', 'do_calc', 'do_pv_clear']
     readonly_fields = ['ev']
     exclude = ['pv_ymb', 'ev_ymb', 'ac_ymb']
+    menu_index = 30
 
     def get_queryset(self, request):
         user = request.user
@@ -200,6 +247,7 @@ class StaffAdmin(admin.ModelAdmin):
     list_filter = ('project', 'created', 'modified')
     search_fields = ('name',)
     list_display_links = ('id', 'name')
+    menu_index = 20
 
     def get_queryset(self, request):
         user = request.user
@@ -207,17 +255,6 @@ class StaffAdmin(admin.ModelAdmin):
         if not user.is_superuser:
             qs = qs.filter(project__in=get_user_projects(user))
         return qs
-
-
-weekday = {
-    0: '星期一',
-    1: '星期二',
-    2: '星期三',
-    3: '星期四',
-    4: '星期五',
-    5: '星期六',
-    6: '星期日'
-}
 
 
 @admin.register(HRCalendar)
@@ -227,11 +264,12 @@ class HRCalendarAdmin(admin.ModelAdmin):
     # raw_id_fields = ('tasks',)
     list_editable = ('ev',)
     filter_horizontal = ('tasks',)
-    ordering = ('work_date', 'staff')
+    ordering = ('-work_date', 'staff')
     actions = ['do_batch_assign_wbs', 'do_calc']
     list_select_related = ['staff']
     readonly_fields = ['tasks_memo']
     list_display_links = ('id', '_work_date')
+    menu_index = 40
 
     def get_queryset(self, request):
         user = request.user
@@ -239,9 +277,6 @@ class HRCalendarAdmin(admin.ModelAdmin):
         if not user.is_superuser:
             qs = qs.filter(project__in=get_user_projects(user))
         return qs
-
-    def _work_date(self, obj):
-        return f'{obj.work_date.strftime("%Y年%m月%d日")} {weekday[obj.work_date.weekday()]}'
 
     def get_urls(self):
         return [
