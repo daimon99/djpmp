@@ -20,8 +20,14 @@ from .utils import JQUERY_MIN_JS
 
 
 def get_user_projects(user: User):
-    projects = m.Project.objects.filter(group__in=user.groups.all()).all()
+    user_companies = [x.company for x in user.companies.select_related('company').all()]
+    projects = m.Project.objects.filter(company__in=user_companies).all()
     return projects
+
+
+def get_user_companies(user: User):
+    user_companies = [x.company for x in user.companies.select_related('company').all()]
+    return user_companies
 
 
 class StaffInline(admin.TabularInline):
@@ -73,16 +79,16 @@ class ProjectAdmin(admin.ModelAdmin):
     class Media:
         js = [JQUERY_MIN_JS, 'admin/js/summary.js', 'admin/djpmp/project/project.js', ]
 
-    list_display = ('id', 'name', 'status', 'group', 'pv_rmb', 'ev_rmb', 'ac_rmb', 'created',)
+    list_display = ('id', 'name', 'company', 'pm', 'status', 'pv_rmb', 'ev_rmb', 'ac_rmb', 'created',)
     list_filter = ('status', 'created', 'modified')
     search_fields = ('name',)
-    readonly_fields = ['pv_rmb', 'ev_rmb', 'ac_rmb']
+    readonly_fields = ['pv_rmb', 'ev_rmb', 'ac_rmb', 'pm']
     actions = ['do_balance', ]
     list_display_links = ('id', 'name')
     radio_fields = {
         'status': admin.HORIZONTAL
     }
-    inlines = [StaffInline, WBSInline, HRCalendarInline]
+    # inlines = [WBSInline, HRCalendarInline]
     menu_index = 10
 
     def get_queryset(self, request):
@@ -152,7 +158,7 @@ class WBSAdmin(DraggableMPTTAdmin):
         user = request.user
         qs = super().get_queryset(request)
         if not user.is_superuser:
-            qs = qs.filter(project__in=get_user_projects(user))
+            qs = qs.filter(company__in=get_user_companies(user))
         return qs
 
     @property
@@ -207,7 +213,7 @@ class WBSAdmin(DraggableMPTTAdmin):
 
     def do_batch_update_code(self, request, qs):
         """批量生成code"""
-        roots = m.WBS.objects.filter(parent__isnull=True).order_by('pk').all()
+        roots = qs.filter(parent__isnull=True).order_by('pk').all()
         next_index = 1
         for root in roots:
             root.code = f'{next_index}'
@@ -256,7 +262,7 @@ def set_index(parent: m.WBS):
 @admin.register(Staff)
 class StaffAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'man_day_price', 'created', 'modified')
-    list_filter = ('project', 'created', 'modified')
+    list_filter = ('company', 'created', 'modified')
     search_fields = ('name',)
     list_display_links = ('id', 'name')
     menu_index = 20
@@ -265,7 +271,7 @@ class StaffAdmin(admin.ModelAdmin):
         user = request.user
         qs = super().get_queryset(request)
         if not user.is_superuser:
-            qs = qs.filter(project__in=get_user_projects(user))
+            qs = qs.filter(company__in=get_user_companies(user))
         return qs
 
 
@@ -290,7 +296,7 @@ class HRCalendarAdmin(admin.ModelAdmin):
         user = request.user
         qs = super().get_queryset(request)
         if not user.is_superuser:
-            qs = qs.filter(project__in=get_user_projects(user))
+            qs = qs.filter(company__in=get_user_companies(user))
         return qs
 
     def get_urls(self):
@@ -344,3 +350,15 @@ class HRCalendarAdmin(admin.ModelAdmin):
 
     do_calc.short_description = '计算挣值'
     do_calc.allowed_permissions = ['change', ]
+
+
+@admin.register(m.Company)
+class CompanyAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    menu_index = 90
+
+
+@admin.register(m.UserCompany)
+class UserCompanyAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'company')
+    menu_index = 91
