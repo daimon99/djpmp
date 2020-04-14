@@ -3,6 +3,7 @@
 from django.contrib.auth.models import User, Group
 from django.db import models
 from django.http import HttpRequest
+from django.utils.safestring import mark_safe
 from django_extensions.db.models import TimeStampedModel
 from django_middleware_global_request.middleware import get_request
 from mptt.models import MPTTModel, TreeForeignKey
@@ -77,6 +78,13 @@ class WBS(TimeStampedModel, MPTTModel):
     pv_ymb = models.FloatField(default=0, help_text='计划价值，单位元', verbose_name='计划价值')
     ev_ymb = models.FloatField(default=0, help_text='完工价值，单位元', verbose_name='完工价值')
 
+    def _name(self):
+        """缩进的name"""
+        level = self.get_level()
+        return mark_safe(f'<span style="padding-left: {24 * level}px">{self.code} {self.name}</span>')
+
+    _name.short_description = '任务'
+
 
 class Staff(TimeStampedModel):
     class Meta:
@@ -128,6 +136,7 @@ class HRCalendar(TimeStampedModel):
             self.tasks_memo = ' / '.join([str(i) for i in self.tasks.all()])
         return super().save(**kwargs)
 
-    @property
     def _work_date(self):
         return f'{self.work_date.strftime("%Y年%m月%d日")} {weekday[self.work_date.weekday()]}'
+
+    _work_date.short_description = '日期'

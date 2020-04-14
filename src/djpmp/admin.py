@@ -38,9 +38,9 @@ class StaffInline(admin.TabularInline):
 
 class WBSInline(admin.TabularInline):
     model = m.WBS
-    fields = ('code', 'name', 'pv', 'ev', 'pv_ymb', 'ev_ymb', 'ac_ymb')
+    fields = ('_name', 'pv', 'ev', 'pv_ymb', 'ev_ymb', 'ac_ymb')
     # readonly_fields = ('ev', 'pv_ymb', 'ev_ymb', 'ac_ymb')
-    # readonly_fields = fields
+    readonly_fields = fields
 
     ordering = ('code', 'name')
     extra = 0
