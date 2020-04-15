@@ -261,7 +261,7 @@ def set_index(parent: m.WBS):
 
 @admin.register(Staff)
 class StaffAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'man_day_price', 'created', 'modified')
+    list_display = ('id', 'name', 'company', 'role', 'man_day_price', 'created', 'modified')
     list_filter = ('company', 'created', 'modified')
     search_fields = ('name',)
     list_display_links = ('id', 'name')
