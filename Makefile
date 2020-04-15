@@ -49,7 +49,7 @@ docker-run: ## docker run
 
 docker-release: test docker-test ## merge master to docker
 	bumpversion patch
-	git checkout -b docker origin/docker
+	git checkout -B docker origin/docker
 	git merge master
 	git checkout master
 
