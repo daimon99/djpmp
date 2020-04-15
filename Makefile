@@ -74,9 +74,5 @@ pdf: ## 构建 pdf 文档
 doc-clean: ## 清理 doc 构建数据
 	cd docs && make clean
 
-CODE_DIR ?= .
-test: ## test docker
-	CODE_DIR=$(CODE_DIR) ./docker-entrypoint.sh runserver
-
 %:  ## cli命令
 	env/bin/python "cli.py" $(MAKECMDGOALS)
