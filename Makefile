@@ -49,9 +49,9 @@ docker-run: ## docker run
 
 docker-release: test docker-test ## merge master to docker
 	bumpversion patch
-	git checkout -B docker origin/docker
-	git merge master
-	git checkout master
+# 	git checkout -B docker origin/docker
+# 	git merge master
+# 	git checkout master
 
 release: docker-release # 发布到生产环境
 	docker push ccr.ccs.tencentyun.com/tjhb/djpmp:latest
