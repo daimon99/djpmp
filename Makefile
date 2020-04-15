@@ -53,6 +53,9 @@ docker-release: test docker-test ## merge master to docker
 	git merge master
 	git checkout master
 
+release: docker-release # 发布到生产环境
+	docker push ccr.ccs.tencentyun.com/tjhb/djpmp:latest
+
 test: ## Smoke Test suit
 	PYTHONPATH=./src pytest -m "smoke"
 
