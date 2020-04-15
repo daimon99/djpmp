@@ -155,7 +155,7 @@ class WBS(TimeStampedModel, MPTTModel):
 
 class Staff(TimeStampedModel):
     class Meta:
-        verbose_name = verbose_name_plural = '项目成员'
+        verbose_name = verbose_name_plural = '人力资源'
 
     def __str__(self):
         return f'{self.id} - {self.name}'
