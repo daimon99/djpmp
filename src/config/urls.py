@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.contrib.admin import site
 from django.contrib.auth.models import User
 from django.http import HttpRequest, HttpResponseForbidden
+from django.shortcuts import redirect
 from django.urls import path, include
 from django.views.static import serve
 from django_dj_plugin.utils import get_real_ip
@@ -77,7 +78,8 @@ urlpatterns = [
     path('api/auth-jwt/', obtain_jwt_token),  # POST email=email&password=password
     path('api/auth-jwt-verify/', verify_jwt_token),
     path('api/auth-jwt-refresh/', refresh_jwt_token),
-    path(f'upload/<path:path>', private_view)
+    path(f'upload/<path:path>', private_view),
+    path('', lambda request: redirect('admin:index', permanent=False)),
 ]
 
 if settings.DEBUG:

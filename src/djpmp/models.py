@@ -121,6 +121,10 @@ class Project(TimeStampedModel):
         ret = super().save(**kwargs)
         return ret
 
+    def _pm_name(self):
+        return f'{self.pm.first_name}' if self.pm and self.pm.first_name else '-'
+    _pm_name.short_description = '项目经理'
+
 
 class WBS(TimeStampedModel, MPTTModel):
     class Meta:

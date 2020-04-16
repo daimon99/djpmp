@@ -30,6 +30,19 @@ def get_user_companies(user: User):
     return user_companies
 
 
+def get_user_last_company(user: User):
+    user_companies = get_user_companies(user)
+    if user_companies:
+        return user_companies[-1]
+    else:
+        return None
+
+
+def get_user_last_project(user):
+    user_projects = get_user_projects(user)
+    return user_projects.last()
+
+
 class StaffInline(admin.TabularInline):
     model = m.Staff
     fields = ('name', 'man_day_price', 'role')
@@ -79,16 +92,16 @@ class ProjectAdmin(admin.ModelAdmin):
     class Media:
         js = [JQUERY_MIN_JS, 'admin/js/summary.js', 'admin/djpmp/project/project.js', ]
 
-    list_display = ('id', 'name', 'company', 'pm', 'status', 'pv_rmb', 'ev_rmb', 'ac_rmb', 'created',)
+    list_display = ('id', 'name', 'company', '_pm_name', 'status', 'pv_rmb', 'ev_rmb', 'ac_rmb', 'created',)
     list_filter = ('status', 'created', 'modified')
     search_fields = ('name',)
-    readonly_fields = ['pv_rmb', 'ev_rmb', 'ac_rmb', 'pm']
+    readonly_fields = ['pv_rmb', 'ev_rmb', 'ac_rmb']
     actions = ['do_balance', ]
     list_display_links = ('id', 'name')
     radio_fields = {
         'status': admin.HORIZONTAL
     }
-    # inlines = [WBSInline, HRCalendarInline]
+    inlines = [WBSInline, HRCalendarInline]
     menu_index = 10
 
     def get_queryset(self, request):
@@ -97,6 +110,12 @@ class ProjectAdmin(admin.ModelAdmin):
         if not user.is_superuser:
             qs = get_user_projects(user)
         return qs
+
+    def get_changeform_initial_data(self, request):
+        init = super().get_changeform_initial_data(request)
+        init['company'] = get_user_last_company(request.user)
+        init['pm'] = request.user
+        return init
 
     def do_balance(self, req, qs):
 
@@ -160,6 +179,19 @@ class WBSAdmin(DraggableMPTTAdmin):
         if not user.is_superuser:
             qs = qs.filter(company__in=get_user_companies(user))
         return qs
+
+    def get_changeform_initial_data(self, request):
+        init = super().get_changeform_initial_data(request)
+        init['company'] = get_user_last_company(request.user)
+        init['project'] = get_user_last_project(request.user)
+        return init
+
+    def get_fields(self, request, obj=None):
+        if not obj:
+            fields = ['name', 'company', 'project']
+        else:
+            fields = super().get_fields(request, obj)
+        return fields
 
     @property
     def total_pv(self):
@@ -273,6 +305,11 @@ class StaffAdmin(admin.ModelAdmin):
         if not user.is_superuser:
             qs = qs.filter(company__in=get_user_companies(user))
         return qs
+
+    def get_changeform_initial_data(self, request):
+        init = super().get_changeform_initial_data(request)
+        init['company'] = get_user_last_company(request.user)
+        return init
 
 
 @admin.register(HRCalendar)
