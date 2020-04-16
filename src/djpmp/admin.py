@@ -318,7 +318,7 @@ class HRCalendarAdmin(admin.ModelAdmin):
     class Media:
         js = (JQUERY_MIN_JS, 'admin/js/summary.js', 'admin/djpmp/hrcalendar/hrcalendar.js')
 
-    list_display = ('id', '_work_date', 'staff', 'ev', 'tasks_memo')
+    list_display = ('id', '_work_date', 'staff', 'ev', 'status', 'tasks_memo')
     list_filter = ('project', 'work_date', 'staff')
     # raw_id_fields = ('tasks',)
     list_editable = ('ev',)
@@ -412,6 +412,9 @@ class HRCalendarAdmin(admin.ModelAdmin):
 
     do_batch_confirm.short_description = '批量确认资源投入'
     do_batch_confirm.allowed_permissions = ['change', ]
+
+    def has_change_permission(self, request, obj=None):
+        return obj.status == '已确认'
 
 
 @admin.register(m.Company)
