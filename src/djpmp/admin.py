@@ -340,7 +340,9 @@ class HRCalendarAdmin(admin.ModelAdmin):
     def get_urls(self):
         return [
                    path('batch-create/', self.admin_site.admin_view(self.view_batch_create),
-                        name='djpmp_hrcalendar_batch-create')
+                        name='djpmp_hrcalendar_batch-create'),
+                   path('self-report/', self.view_self_report,
+                        name='djpmp_hrcalendar_self-report'),
                ] + super().get_urls()
 
     def get_changeform_initial_data(self, request):
@@ -418,6 +420,24 @@ class HRCalendarAdmin(admin.ModelAdmin):
         if obj and is_ok:
             return obj.status == '待确认'
         return is_ok
+
+    def view_self_report(self, request, *args, **kwargs):
+        # if not self.has_add_permission(request):
+        #     raise PermissionDenied
+        if request.method == 'POST':
+            form = forms.DateSpanForm(request.POST)
+            if form.is_valid():
+                form.save()
+                self.message_user(request, f'批量创建日历成功!')
+                return HttpResponseRedirect(reverse('admin:djpmp_hrcalendar_changelist'))
+        else:
+            # form = forms.SelfReport()
+            pass
+        context = {
+            'title': '批量创建资源日历',
+            # 'form': form,
+        }
+        return render(request, 'admin/djpmp/hrcalendar/self-report.html', context=context)
 
 
 @admin.register(m.Company)

@@ -36,3 +36,9 @@ class DateSpanForm(forms.Form):
             project = data['project']
             for staff in data['staffs']:
                 m.HRCalendar.objects.create(work_date=day, staff=staff, project=project, company=data['company'])
+
+
+class SelfReport(forms.ModelForm):
+    class Meta:
+        model = m.HRCalendar
+        fields = ['company', 'project', 'staff', 'work_date', 'ev', 'tasks']
