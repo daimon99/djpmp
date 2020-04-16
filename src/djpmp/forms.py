@@ -16,10 +16,6 @@ class DateSpanForm(forms.Form):
     staffs = forms.ModelMultipleChoiceField(None, required=True, label='员工列表')
 
     def __init__(self, *args, **kwargs):
-        kwargs.update(initial={
-            # 'field': 'value'
-            'project': 3
-        })
         super().__init__(*args, **kwargs)
         user = get_request().user
         companie_ids = [x.company_id for x in user.companies.all()]
@@ -39,4 +35,4 @@ class DateSpanForm(forms.Form):
             day = data['start_date'] + datetime.timedelta(days=d)
             project = data['project']
             for staff in data['staffs']:
-                m.HRCalendar.objects.create(work_date=day, staff=staff, project=project)
+                m.HRCalendar.objects.create(work_date=day, staff=staff, project=project, company=data['company'])

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
 from functools import reduce
 
 from django.contrib import admin
@@ -342,6 +343,22 @@ class HRCalendarAdmin(admin.ModelAdmin):
                         name='djpmp_hrcalendar_batch-create')
                ] + super().get_urls()
 
+    def get_changeform_initial_data(self, request):
+        init = super().get_changeform_initial_data(request)
+        user_last_company = get_user_last_company(request.user)
+        init['company'] = user_last_company
+        user_last_project = get_user_last_project(request.user)
+        init['project'] = user_last_project
+        init['work_date'] = datetime.now().strftime('%Y-%m-%d')
+        try:
+            init['staff'] = m.HRCalendar.objects.filter(project=user_last_project).latest('created').staff
+        except:
+            try:
+                init['staff'] = m.Staff.objects.filter(company=user_last_company).last()
+            except:
+                pass
+        return init
+
     def view_batch_create(self, request):
         """批量创建资源日历"""
         if not self.has_add_permission(request):
@@ -374,7 +391,7 @@ class HRCalendarAdmin(admin.ModelAdmin):
         context = {
             'title': '选择要指派的任务',
             'selected': qs,
-            'wbs': m.WBS.objects.all()
+            'wbs': m.WBS.objects.filter(company=qs.first().company).all()
         }
         return render(request, 'admin/djpmp/hrcalendar/batch-assign-wbs.html', context=context)
 
