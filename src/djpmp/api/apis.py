@@ -41,3 +41,7 @@ class HRCalendarApi(viewsets.ModelViewSet):
 class WBSApi(viewsets.ModelViewSet):
     queryset = m.WBS.objects.all()
     serializer_class = serializers.WBSSerializer
+
+class ProjectApi(viewsets.ModelViewSet):
+    queryset = m.Project.objects.all()
+    serializer_class = serializers.ProjectSerializer

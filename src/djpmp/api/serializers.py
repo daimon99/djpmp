@@ -28,3 +28,9 @@ class WBSSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.WBS
         fields = '__all__'
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = m.Project
+        fields = '__all__'
