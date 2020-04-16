@@ -123,6 +123,7 @@ class Project(TimeStampedModel):
 
     def _pm_name(self):
         return f'{self.pm.first_name}' if self.pm and self.pm.first_name else '-'
+
     _pm_name.short_description = '项目经理'
 
 
@@ -203,6 +204,10 @@ class HRCalendar(TimeStampedModel):
     ))
     tasks = models.ManyToManyField(WBS, blank=True, limit_choices_to=my_tasks)
     tasks_memo = models.CharField(max_length=512, blank=True, null=True, verbose_name='任务说明')
+    status = models.CharField(max_length=32, verbose_name='状态', choices=(
+        ('待确认', '待确认'),
+        ('已确认', '已确认'),
+    ), default='待确认')
 
     def save(self, **kwargs):
         if self.id:

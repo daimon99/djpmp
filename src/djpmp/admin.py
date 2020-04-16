@@ -405,6 +405,14 @@ class HRCalendarAdmin(admin.ModelAdmin):
     do_calc.short_description = '计算挣值'
     do_calc.allowed_permissions = ['change', ]
 
+    def do_batch_confirm(self, req, qs):
+        """批量确认"""
+        qs.update(status='已确认')
+        self.message_user(req, '选定的资源投入已经确认', 25)
+
+    do_batch_confirm.short_description = '批量确认资源投入'
+    do_batch_confirm.allowed_permissions = ['change', ]
+
 
 @admin.register(m.Company)
 class CompanyAdmin(admin.ModelAdmin):
