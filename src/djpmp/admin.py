@@ -324,11 +324,11 @@ class HRCalendarAdmin(admin.ModelAdmin):
     list_editable = ('ev',)
     filter_horizontal = ('tasks',)
     ordering = ('-work_date', 'staff')
-    actions = ['do_batch_assign_wbs', 'do_calc']
     list_select_related = ['staff']
     readonly_fields = ['tasks_memo']
     list_display_links = ('id', '_work_date')
     menu_index = 40
+    actions = ['do_batch_assign_wbs', 'do_calc', 'do_batch_confirm']
 
     def get_queryset(self, request):
         user = request.user
@@ -414,7 +414,10 @@ class HRCalendarAdmin(admin.ModelAdmin):
     do_batch_confirm.allowed_permissions = ['change', ]
 
     def has_change_permission(self, request, obj=None):
-        return obj.status == '已确认'
+        is_ok = super().has_change_permission(request, obj)
+        if obj and is_ok:
+            return obj.status == '待确认'
+        return is_ok
 
 
 @admin.register(m.Company)
