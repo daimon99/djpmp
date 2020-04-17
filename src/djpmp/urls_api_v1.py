@@ -21,8 +21,9 @@ from . import api
 # todo: 以下接口未设置权限隔离，用户可以看到所有数据。正式上线需要屏蔽多余的接口(list/retrieve)
 router = routers.DefaultRouter()
 # router.register(r'tools', api.ToolsApi, basename='tools')
-router.register(r'wbs', api.WBSApi)
+router.register('wbs', api.WBSApi)
 router.register('hrcalendar', api.HRCalendarApi)
+router.register('self-report', api.SelfReportApi, basename='self-report')
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.

@@ -71,13 +71,34 @@ class SelfReportApi(viewsets.ViewSet):
                 'code': -1,
                 'msg': '项目不存在或令牌不对'
             })
+
+        roots = project.wbs_set.filter(project_id=pid, level=0).all()
+        tasks = []
+        for i in roots:
+            data = {'value': i.id, 'label': i.name}
+            if not i.is_leaf_node():
+                data['children'] = get_children(i)
+            tasks.append(data)
         ret = {
             'code': 0,
             'msg': '返回项目初始信息成功',
             'company_name': project.company.name,
             'project_name': project.name,
             'staffs': [{'name': x.name, 'id': x.id} for x in project.company.staff_set.all()],
-            'tasks': [{'id': x.id, 'name': x.name, 'level': x.get_level(), 'parent_id': x.parent_id} for x in project.wbs_set.all()]
-
+            'tasks': tasks
         }
         return Response(ret)
+
+
+def get_children(node):
+    """获取节点树"""
+    if node.is_leaf_node():
+        return
+    children = node.get_children()
+    ret = []
+    for i in children:
+        data = {'value': i.id, 'label': i.name}
+        if not i.is_leaf_node():
+            data['children'] = get_children(i)
+        ret.append(data)
+    return ret
