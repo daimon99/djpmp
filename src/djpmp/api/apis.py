@@ -1,7 +1,7 @@
 # coding: utf-8
 """接口业务逻辑实现代码"""
 
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 # from .serializers import ProjectSerializer, ContractSerializer
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -56,25 +56,33 @@ class CompanyApi(viewsets.ModelViewSet):
     serializer_class = serializers.CompanySerializer
 
 
+class SelfReportPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        pid = request.GET.get('pid')
+        token = request.GET.get('token')
+        if not pid:
+            return False
+        print('--1', pid, token)
+        try:
+            project = m.Project.objects.get(token=token, pk=pid)
+            view.project = project
+            return True
+        except m.Project.DoesNotExist:
+            print('--2')
+            return False
+
+
 class SelfReportApi(viewsets.ViewSet):
     authentication_classes = ()
-    permission_classes = ()
+    permission_classes = [SelfReportPermission]
 
     @action(['get'], detail=False)
     def get_init_data(self, req: Request):
-        token = req.GET.get('token')
-        pid = req.GET.get('pid')
-        try:
-            project = m.Project.objects.get(token=token, pk=pid)
-        except m.Project.DoesNotExist:
-            return Response({
-                'code': -1,
-                'msg': '项目不存在或令牌不对'
-            })
-
+        project = self.project
         # roots = project.wbs_set.filter(project_id=pid, level=0).all()
         # tasks = tree_for_nodes(roots)
-        tasks = [{'value': x.id, 'label': x._code_name()} for x in project.wbs_set.filter(project_id=pid).all()]
+        tasks = [{'value': x.id, 'label': x._code_name(), 'level': x.level} for x in
+                 project.wbs_set.filter(project_id=project.id).all()]
         ret = {
             'code': 0,
             'msg': '返回项目初始信息成功',
@@ -84,6 +92,10 @@ class SelfReportApi(viewsets.ViewSet):
             'tasks': tasks
         }
         return Response(ret)
+
+    @action(methods=['post'], detail=False)
+    def save(self, req, *args, **kwargs):
+        pid = req.GET.get('pid')
 
 
 def tree_for_nodes(roots):

@@ -20,12 +20,20 @@
         padding: 0 10px;
         background-color: #f2f2f2;
     }
+    .el-message-box {
+        width: inherit !important;
+    }
 </style>
 
 <body>
 <div id="app">
     <h3 class="h1">工作量自助报告</h3>
-    <el-form ref="form" :model="form" label-width="80px">
+    <el-alert
+        :title="msg"
+        type="error"
+        effect="dark" v-if="msg">
+    </el-alert>
+    <el-form ref="form" :model="form" label-width="80px" v-if="showForm">
         <el-form-item label="公司">
             <el-input v-model="form.company" readonly></el-input>
         </el-form-item>
@@ -37,11 +45,9 @@
                 <el-option v-for="staff in staff_options" :label="staff.name" :value="staff.id"></el-option>
             </el-select>
         </el-form-item>
-        <el-form-item label="时间">
-            <el-col :span="11">
-                <el-date-picker type="date" placeholder="选择日期" v-model="form.work_date"
-                                style="width: 100%;"></el-date-picker>
-            </el-col>
+        <el-form-item label="日期">
+            <el-date-picker type="date" placeholder="选择日期" v-model="form.work_date"
+                            style="width: 100%;"></el-date-picker>
         </el-form-item>
         <el-form-item label="任务">
             <!--            <el-cascader-->
@@ -50,7 +56,8 @@
             <!--                    clearable collapse-tags></el-cascader>-->
             <el-checkbox-group v-model="form.tasks">
                 <div v-for="task in task_options">
-                    <el-checkbox :label="task.value">{{task.label}}</el-checkbox>
+                    <el-checkbox :label="task.value"><span
+                        :style="'margin-left: ' + task.level*5 + 'px'">{{task.label}}</span></el-checkbox>
                 </div>
             </el-checkbox-group>
         </el-form-item>
@@ -64,6 +71,19 @@
 </body>
 <!-- import Vue before Element -->
 <script>
+    function findGetParameter(parameterName) {
+        var result = null,
+            tmp = [];
+        location.search
+            .substr(1)
+            .split("&")
+            .forEach(function (item) {
+                tmp = item.split("=");
+                if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+            });
+        return result;
+    }
+
     var vue = new Vue({
         el: '#app',
         data: function () {
@@ -76,22 +96,59 @@
                     tasks: [],
                 },
                 task_options: [],
-                staff_options: []
+                staff_options: [],
+                msg: '',
+                showForm: false, // 是否非法访问。非法访问不显示表单,
+                pid: '',
+                token: ''
             }
         },
         methods: {
             onSubmit() {
                 console.log('submit')
+                let form = this.form
+                localStorage.setItem('form', JSON.stringify(form))
             }
         },
         mounted() {
-            axios.get('/api/v1/self-report/get_init_data/?pid=1').then(res => {
+            let pid = findGetParameter('pid')
+            let token = findGetParameter('token')
+            this.pid = pid
+            this.token = token
+            console.log(pid, token)
+            let url = `/api/v1/self-report/get_init_data/?pid=${pid}&token=${token}`
+            console.log('url', url)
+            axios.get(url).then(res => {
                 console.log(res)
+                this.showForm = true
                 let data = res.data
                 this.form.company = data.company_name
                 this.form.project = data.project_name
                 this.staff_options = data.staffs
                 this.task_options = data.tasks
+                // 处理上次输入值
+                let form_cache = localStorage.getItem('form')
+                if (form_cache != null) {
+                    form_cache = JSON.parse(form_cache)
+                    this.form.staff = form_cache.staff
+                    this.form.tasks = form_cache.tasks
+                    this.form.work_date = form_cache.work_date
+                }
+            }).catch(res => {
+                this.msg = '非法访问，请核实后再访问！'
+                this.showForm = false
+                this.$prompt('请输入密码', '非法访问', {
+                    confirmButtonText: '确定',
+                }).then(({value}) => {
+                    this.token = value
+                    console.log('redirect to ', `./?pid=${this.pid}&token=${this.token}`)
+                    location.replace(`?pid=${this.pid}&token=${this.token}`);
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '取消输入'
+                    });
+                });
 
             })
         }
