@@ -229,7 +229,6 @@ class WBSAdmin(DraggableMPTTAdmin):
         """批量更新父任务"""
         if 'apply' in request.POST:
             parent_id = request.POST.get('wbs_list')
-            print('parentid: ', parent_id)
             parent = m.WBS.objects.get(pk=parent_id)
             for i in qs:
                 i: m.WBS
