@@ -158,6 +158,12 @@ class WBS(TimeStampedModel, MPTTModel):
 
     _name.short_description = '任务'
 
+    def _code_name(self):
+        if self.code and self.name:
+            return f'{self.code} {self.name}'
+        else:
+            return self.name
+
 
 class Staff(TimeStampedModel):
     class Meta:
