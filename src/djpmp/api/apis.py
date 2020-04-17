@@ -1,6 +1,9 @@
 # coding: utf-8
 """接口业务逻辑实现代码"""
 
+import logging
+from datetime import datetime
+
 from rest_framework import viewsets, permissions
 # from .serializers import ProjectSerializer, ContractSerializer
 from rest_framework.decorators import action
@@ -9,6 +12,8 @@ from rest_framework.response import Response
 
 from . import serializers
 from .. import models as m
+
+log = logging.getLogger(__name__)
 
 
 #
@@ -62,13 +67,11 @@ class SelfReportPermission(permissions.BasePermission):
         token = request.GET.get('token')
         if not pid:
             return False
-        print('--1', pid, token)
         try:
             project = m.Project.objects.get(token=token, pk=pid)
             view.project = project
             return True
         except m.Project.DoesNotExist:
-            print('--2')
             return False
 
 
@@ -95,7 +98,38 @@ class SelfReportApi(viewsets.ViewSet):
 
     @action(methods=['post'], detail=False)
     def save(self, req, *args, **kwargs):
-        pid = req.GET.get('pid')
+        form = req.data.get('form')
+        if not form:
+            return Response({
+                'code': -1,
+                'msg': 'no form'
+            })
+        """
+        {"pid":"1","token":"123","form":
+        {"company":"默认公司",
+        "project":"营区预警管理系统",
+        "staff":1,"work_date":"2020-03-31T16:00:00.000Z","tasks":[1,2,4]}}
+        """
+        staff_id = form.get('staff_id')
+        project_id = form.get('project_id')
+        work_date = datetime.fromtimestamp(int(form.get('work_date')) / 1000)
+        tasks = form.get('tasks')
+        ev = form.get('ev')
+        print('form: ', form)
+        print(staff_id, project_id, work_date, tasks)
+        record = m.HRCalendar.objects.create(
+            project_id=project_id,
+            work_date=work_date,
+            staff_id=staff_id,
+            ev=ev
+        )
+        record.tasks.set(tasks)
+        record.save()  # 重新计算 hrcalendar 的tasks_memo 值
+        return Response({
+            'code': 0,
+            'msg': '成功',
+
+        })
 
 
 def tree_for_nodes(roots):

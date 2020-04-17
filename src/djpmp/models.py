@@ -219,6 +219,8 @@ class HRCalendar(TimeStampedModel):
     def save(self, **kwargs):
         if self.id:
             self.tasks_memo = ' / '.join([str(i) for i in self.tasks.all()])
+        if self.project:
+            self.company = self.project.company
         return super().save(**kwargs)
 
     def _work_date(self):
