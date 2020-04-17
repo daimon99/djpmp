@@ -108,6 +108,11 @@
                 console.log('submit')
                 let form = this.form
                 localStorage.setItem('form', JSON.stringify(form))
+                axios.post(`/api/v1/self-report/save/?pid=${this.pid}&token=${this.token}`, {
+                    pid: this.pid,
+                    token: this.token,
+                    form: this.form
+                })
             }
         },
         mounted() {
