@@ -225,18 +225,23 @@ class WBSAdmin(DraggableMPTTAdmin):
         except:
             pass
 
-    def do_batch_update_parent(self, request, qs):
+    def do_batch_update_parent(self, request:HttpRequest, qs):
         """批量更新父任务"""
         if 'apply' in request.POST:
-            parent_id = request.POST.get('parent_id')
+            parent_id = request.POST.get('wbs_list')
+            print('parentid: ', parent_id)
+            parent = m.WBS.objects.get(pk=parent_id)
             for i in qs:
-                i.parent_id = parent_id
+                i: m.WBS
+                i.parent = parent
                 i.save()
+
             self.message_user(request, f'选择的任务的父级任务已经设置为：{parent_id}')
-            return HttpResponseRedirect(reverse('admin:djpmp_wbs_changelist'))
+            return HttpResponseRedirect(request.build_absolute_uri())
         context = {
             'title': '选择父级任务',
-            'tasks': m.WBS.objects.all(),
+            'wbs': m.WBS.objects.filter(project_id=qs.first().project_id).exclude(
+                pk__in=[x.id for x in qs.all()]).all(),
             'task_selected': qs
         }
         return render(request, 'admin/djpmp/wbs/batch-update-parent.html', context=context)
@@ -430,9 +435,6 @@ class HRCalendarAdmin(admin.ModelAdmin):
                 form.save()
                 self.message_user(request, f'批量创建日历成功!')
                 return HttpResponseRedirect(reverse('admin:djpmp_hrcalendar_changelist'))
-        else:
-            # form = forms.SelfReport()
-            pass
         context = {
             'title': '批量创建资源日历',
             # 'form': form,

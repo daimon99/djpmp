@@ -114,6 +114,7 @@ class Project(TimeStampedModel):
         ('进行中', '进行中'),
         ('完成', '完成')
     ), default='进行中')
+    token = models.CharField(verbose_name='权限码', blank=True, null=True, max_length=128)
 
     def save(self, **kwargs):
         if not self.pm:

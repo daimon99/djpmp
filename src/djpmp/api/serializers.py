@@ -34,3 +34,9 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.Project
         fields = '__all__'
+
+
+class CompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = m.Project
+        fields = '__all__'
