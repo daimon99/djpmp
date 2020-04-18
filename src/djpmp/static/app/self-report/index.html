@@ -30,9 +30,9 @@
 <div id="app">
     <h3 class="h1">工作量自助报告</h3>
     <el-alert
-        :title="msg"
-        type="error"
-        effect="dark" v-if="msg">
+            :title="msg"
+            type="error"
+            effect="dark" v-if="msg">
     </el-alert>
     <el-form ref="form" :model="form" label-width="80px" v-if="showForm">
         <el-form-item label="公司">
@@ -53,10 +53,10 @@
         <el-form-item label="工作量">
             <el-select placeholder="选择工作量" v-model="form.ev">
                 <el-option
-                    v-for="item in ev_options"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value">
+                        v-for="item in ev_options"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value">
                 </el-option>
             </el-select>
         </el-form-item>
@@ -68,7 +68,7 @@
             <el-checkbox-group v-model="form.tasks">
                 <div v-for="task in task_options">
                     <el-checkbox :label="task.value"><span
-                        :style="'margin-left: ' + task.level*5 + 'px'">{{task.label}}</span></el-checkbox>
+                            :style="'margin-left: ' + task.level*5 + 'px'">{{ task.label }}</span></el-checkbox>
                 </div>
             </el-checkbox-group>
         </el-form-item>
@@ -78,20 +78,43 @@
             <el-button>取消</el-button>
         </el-form-item>
     </el-form>
+    <hr>
+    <el-table
+            :data="tableData"
+            style="width: 100%">
+        <el-table-column sortable
+                         prop="work_date"
+                         label="日期"
+                         width="180">
+        </el-table-column>
+        <el-table-column sortable
+                         prop="staff_name"
+                         label="姓名"
+                         width="180">
+        </el-table-column>
+        <el-table-column sortable
+                         prop="ev"
+                         label="工作量">
+        </el-table-column>
+        <el-table-column
+                prop="tasks_memo"
+                label="任务">
+        </el-table-column>
+    </el-table>
 </div>
 </body>
 <!-- import Vue before Element -->
 <script>
     function findGetParameter(parameterName) {
         var result = null,
-            tmp = [];
+                tmp = [];
         location.search
-            .substr(1)
-            .split("&")
-            .forEach(function (item) {
-                tmp = item.split("=");
-                if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
-            });
+                .substr(1)
+                .split("&")
+                .forEach(function (item) {
+                    tmp = item.split("=");
+                    if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+                });
         return result;
     }
 
@@ -119,7 +142,8 @@
                 msg: '',
                 showForm: false, // 是否非法访问。非法访问不显示表单,
                 pid: '',
-                token: ''
+                token: '',
+                tableData: []
             }
         },
         methods: {
@@ -131,10 +155,10 @@
                     pid: this.pid,
                     token: this.token,
                     form: this.form
-                }).then(res=>{
-                    if (res.data.code == 0){
+                }).then(res => {
+                    if (res.data.code == 0) {
                         this.$message('保存成功')
-                    }else{
+                    } else {
                         this.$message(res.data.msg)
                     }
                 })
@@ -157,6 +181,7 @@
                 this.form.project_name = data.project_name
                 this.staff_options = data.staffs
                 this.task_options = data.tasks
+                this.tableData = data.table_data
                 // 处理上次输入值
                 let form_cache = localStorage.getItem('form')
                 if (form_cache != null) {

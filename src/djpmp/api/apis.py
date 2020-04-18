@@ -65,13 +65,14 @@ class SelfReportPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         pid = request.GET.get('pid')
         token = request.GET.get('token')
+        print(pid, token)
         if not pid:
             return False
         try:
             project = m.Project.objects.get(token=token, pk=pid)
             view.project = project
             return True
-        except m.Project.DoesNotExist:
+        except:
             return False
 
 
@@ -86,13 +87,21 @@ class SelfReportApi(viewsets.ViewSet):
         # tasks = tree_for_nodes(roots)
         tasks = [{'value': x.id, 'label': x._code_name(), 'level': x.level} for x in
                  project.wbs_set.filter(project_id=project.id).all()]
+        table_data = [{
+            'work_date': x.work_date.strftime('%Y-%m-%d'),
+            'staff_name': x.staff.name,
+            'ev': x.ev,
+            'tasks_memo': x.tasks_memo} for x in project.hrcalendar_set.order_by('-staff', '-work_date').all()
+            if x.ev > 0
+        ]
         ret = {
             'code': 0,
             'msg': '返回项目初始信息成功',
             'company_name': project.company.name,
             'project_name': project.name,
             'staffs': [{'name': x.name, 'id': x.id} for x in project.company.staff_set.all()],
-            'tasks': tasks
+            'tasks': tasks,
+            'table_data': table_data
         }
         return Response(ret)
 
