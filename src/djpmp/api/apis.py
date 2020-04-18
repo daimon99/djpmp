@@ -16,31 +16,6 @@ from .. import models as m
 log = logging.getLogger(__name__)
 
 
-#
-#
-# class ProjectApi(viewsets.ReadOnlyModelViewSet):
-#     queryset = m.Project.objects.all()
-#     serializer_class = ProjectSerializer
-#
-#
-# class ContractApi(viewsets.ReadOnlyModelViewSet):
-#     queryset = m.Contract.objects.all()
-#     serializer_class = ContractSerializer
-
-
-# class ToolsApi(viewsets.ViewSet):
-#     authentication_classes = ()
-#     permission_classes = ()
-#
-#     @action(['get'], detail=False)
-#     def hello(self, req: Request):
-#         """Sample code
-#         """
-#         with TimeIt() as timeit:
-#             code = 0
-#         telegraf.metric('hello', {'duration': timeit.duration}, {'code': code})
-#         return Response({'code': code, 'msg': 'success'})
-
 class HRCalendarApi(viewsets.ModelViewSet):
     queryset = m.HRCalendar.objects.all()
     serializer_class = serializers.HRCalendarSerializer
@@ -65,7 +40,6 @@ class SelfReportPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         pid = request.GET.get('pid')
         token = request.GET.get('token')
-        print(pid, token)
         if not pid:
             return False
         try:
@@ -91,6 +65,7 @@ class SelfReportApi(viewsets.ViewSet):
             'work_date': x.work_date.strftime('%Y-%m-%d'),
             'staff_name': x.staff.name,
             'ev': x.ev,
+            'status': x.status,
             'tasks_memo': x.tasks_memo} for x in project.hrcalendar_set.order_by('-staff', '-work_date').all()
             if x.ev > 0
         ]
@@ -113,31 +88,31 @@ class SelfReportApi(viewsets.ViewSet):
                 'code': -1,
                 'msg': 'no form'
             })
-        """
-        {"pid":"1","token":"123","form":
-        {"company":"默认公司",
-        "project":"营区预警管理系统",
-        "staff":1,"work_date":"2020-03-31T16:00:00.000Z","tasks":[1,2,4]}}
-        """
         staff_id = form.get('staff_id')
         project_id = form.get('project_id')
         work_date = datetime.fromtimestamp(int(form.get('work_date')) / 1000)
         tasks = form.get('tasks')
         ev = form.get('ev')
-        print('form: ', form)
-        print(staff_id, project_id, work_date, tasks)
-        record = m.HRCalendar.objects.create(
-            project_id=project_id,
-            work_date=work_date,
-            staff_id=staff_id,
-            ev=ev
-        )
+        try:
+            record = m.HRCalendar.objects.get(project_id=project_id, work_date=work_date, staff_id=staff_id)
+            if record.status == '已确认':
+                return Response({
+                    'code': -2,
+                    'msg': f'{record.staff.name} 在 {record.work_date.strftime("%Y-%m-%d")}的工作量已经被确认，无法再调整。'
+                })
+            record.ev = ev
+        except m.HRCalendar.DoesNotExist:
+            record = m.HRCalendar.objects.create(
+                project_id=project_id,
+                work_date=work_date,
+                staff_id=staff_id,
+                ev=ev
+            )
         record.tasks.set(tasks)
         record.save()  # 重新计算 hrcalendar 的tasks_memo 值
         return Response({
             'code': 0,
             'msg': '成功',
-
         })
 
 
