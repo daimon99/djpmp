@@ -68,5 +68,5 @@ class EvFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value() == '1':
             return queryset.exclude(ev=0)
-        else:
+        elif self.value() == '2':
             return queryset.filter(ev=0)
