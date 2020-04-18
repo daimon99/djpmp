@@ -15,7 +15,7 @@ from mptt.admin import TreeRelatedFieldListFilter
 from . import forms
 from . import models as m
 from .biz import core
-from .filters import IsLeafFilter
+from .filters import IsLeafFilter, EvFilter
 from .models import Project, WBS, Staff, HRCalendar
 from .utils import JQUERY_MIN_JS
 
@@ -225,7 +225,7 @@ class WBSAdmin(DraggableMPTTAdmin):
         except:
             pass
 
-    def do_batch_update_parent(self, request:HttpRequest, qs):
+    def do_batch_update_parent(self, request: HttpRequest, qs):
         """批量更新父任务"""
         if 'apply' in request.POST:
             parent_id = request.POST.get('wbs_list')
@@ -323,7 +323,7 @@ class HRCalendarAdmin(admin.ModelAdmin):
         js = (JQUERY_MIN_JS, 'admin/js/summary.js', 'admin/djpmp/hrcalendar/hrcalendar.js')
 
     list_display = ('id', '_work_date', 'staff', 'ev', 'status', 'tasks_memo')
-    list_filter = ('project', 'work_date', 'staff')
+    list_filter = (EvFilter, 'project', 'work_date', 'staff')
     # raw_id_fields = ('tasks',)
     list_editable = ('ev',)
     filter_horizontal = ('tasks',)
