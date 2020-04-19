@@ -58,7 +58,6 @@ class SelfReportApi(viewsets.ViewSet):
     def get_init_data(self, req: Request):
         project = self.project
         roots = list(project.wbs_set.filter(project=project, level=0).all())
-        print(roots)
         # tasks = [{'value': x.id, 'label': x._code_name(), 'level': x.level} for x in
         #          project.wbs_set.filter(project_id=project.id).all()]
         tasks = tree_for_nodes(roots)
