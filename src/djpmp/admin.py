@@ -339,7 +339,7 @@ class HRCalendarAdmin(admin.ModelAdmin):
     readonly_fields = ['tasks_memo']
     list_display_links = ('id', '_work_date')
     menu_index = 40
-    actions = ['do_batch_assign_wbs', 'do_calc', 'do_batch_confirm']
+    actions = ['do_batch_assign_wbs', 'do_calc', 'do_batch_confirm', 'do_batch_update_memo']
 
     def get_queryset(self, request):
         user = request.user
@@ -446,6 +446,13 @@ class HRCalendarAdmin(admin.ModelAdmin):
             # 'form': form,
         }
         return render(request, 'admin/djpmp/hrcalendar/self-report.html', context=context)
+
+    def do_batch_update_memo(self, req, qs):
+        for i in qs:
+            i.save()
+        self.message_user(req, '更新任务说明成功')
+
+    do_batch_update_memo.short_description = '批量更新任务说明'
 
 
 @admin.register(m.Company)
