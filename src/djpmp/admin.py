@@ -332,7 +332,7 @@ class HRCalendarAdmin(admin.ModelAdmin):
     list_display = ('id', '_work_date', 'staff', 'ev', 'status', 'tasks_memo')
     list_filter = (EvFilter, 'project', 'work_date', 'staff')
     # raw_id_fields = ('tasks',)
-    list_editable = ('ev',)
+    # list_editable = ('ev',)
     filter_horizontal = ('tasks',)
     ordering = ('-work_date', 'staff')
     list_select_related = ['staff']
