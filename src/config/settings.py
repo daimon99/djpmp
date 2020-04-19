@@ -16,7 +16,7 @@ import os
 from . import config
 from . import loggings
 
-VERSION = "1.0.10"
+VERSION = "1.0.11"
 
 LOGGING = loggings.LOGGING
 
