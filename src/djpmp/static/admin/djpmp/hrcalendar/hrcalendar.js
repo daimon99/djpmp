@@ -1,5 +1,5 @@
 $(document).ready(function(){
-    calcTotal('input', 'EV', '.field-ev select', '.column-ev')
+    calcTotal('p', 'EV', '.field-ev', '.column-ev')
 });
 
 
