@@ -169,7 +169,7 @@ class WBSAdmin(DraggableMPTTAdmin):
     search_fields = ('name',)
     list_editable = ('pv',)
     ordering = ('tree_id', 'lft')
-    actions = ['do_batch_update_parent', 'do_batch_update_code', 'do_calc', 'do_pv_clear']
+    actions = ['do_batch_update_parent', 'do_batch_update_code', 'do_calc', 'do_pv_clear', 'do_rebuild_tree']
     readonly_fields = ['ev']
     exclude = ['pv_ymb', 'ev_ymb', 'ac_ymb']
     menu_index = 30
@@ -280,6 +280,12 @@ class WBSAdmin(DraggableMPTTAdmin):
 
     do_pv_clear.short_description = 'PV清零'
     do_pv_clear.allowed_permissions = ['change', ]
+
+    def do_rebuild_tree(self, req, qs):
+        m.WBS.objects.rebuild()
+        self.message_user(req, '任务树重建完成')
+
+    do_rebuild_tree = '重建树结构'
 
 
 def set_index(parent: m.WBS):
