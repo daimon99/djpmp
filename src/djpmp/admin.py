@@ -251,11 +251,12 @@ class WBSAdmin(DraggableMPTTAdmin):
     def do_batch_update_code(self, request, qs):
         """批量生成code"""
         roots = qs.filter(parent__isnull=True).order_by('pk').all()
-        next_index = 0
+        # next_index = 0
         for root in roots:
-            root.code = f'{next_index}'
+            # root.code = f'{next_index}'
+            root.code = ""
             root.save()
-            next_index += 1
+            # next_index += 1
             set_index(root)
         self.message_user(request, '编码更新成功')
 
@@ -284,7 +285,7 @@ class WBSAdmin(DraggableMPTTAdmin):
 def set_index(parent: m.WBS):
     next_index = 1
     for child in parent.get_children().order_by('pk').all():
-        if child.is_root_node() or str(child.parent.code) == '0':
+        if child.is_root_node() or str(child.parent.code) == '0' or str(child.parent.code) == '':
             child.code = f'{next_index}'
         else:
             child.code = f'{child.parent.code}.{next_index}'
