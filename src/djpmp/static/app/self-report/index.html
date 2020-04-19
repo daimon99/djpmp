@@ -69,12 +69,15 @@
                     <!--                    :options="task_options"-->
                     <!--                    :props="{ multiple: true, checkStrictly: true }"-->
                     <!--                    clearable collapse-tags></el-cascader>-->
-                    <el-checkbox-group v-model="form.tasks">
-                        <div v-for="task in task_options">
-                            <el-checkbox :label="task.value"><span
-                                    :style="'margin-left: ' + task.level*5 + 'px'">{{ task.label }}</span></el-checkbox>
-                        </div>
-                    </el-checkbox-group>
+                    <el-tree
+                            :data="task_options"
+                            show-checkbox
+                            node-key="value"
+                            :default-checked-keys="form.tasks"
+                            :props="taskDefaultProps"
+                            ref="wbs_tree"
+                    >
+                    </el-tree>
                 </el-form-item>
 
                 <el-form-item>
@@ -161,12 +164,17 @@
                 pid: '',
                 token: '',
                 tableData: [],
-                activeName: 'first'
+                activeName: 'first',
+                taskDefaultProps: {
+                    label: 'label',
+                    children: 'children'
+                }
             }
         },
         methods: {
             onSubmit() {
-                console.log('submit')
+                console.log('submit', this.$refs)
+                this.form.tasks = this.$refs.wbs_tree.getCheckedKeys()
                 let form = this.form
                 localStorage.setItem('form', JSON.stringify(form))
                 axios.post(`/api/v1/self-report/save/?pid=${this.pid}&token=${this.token}`, {

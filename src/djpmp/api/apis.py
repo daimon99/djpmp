@@ -57,10 +57,11 @@ class SelfReportApi(viewsets.ViewSet):
     @action(['get'], detail=False)
     def get_init_data(self, req: Request):
         project = self.project
-        # roots = project.wbs_set.filter(project_id=pid, level=0).all()
-        # tasks = tree_for_nodes(roots)
-        tasks = [{'value': x.id, 'label': x._code_name(), 'level': x.level} for x in
-                 project.wbs_set.filter(project_id=project.id).all()]
+        roots = list(project.wbs_set.filter(project=project, level=0).all())
+        print(roots)
+        # tasks = [{'value': x.id, 'label': x._code_name(), 'level': x.level} for x in
+        #          project.wbs_set.filter(project_id=project.id).all()]
+        tasks = tree_for_nodes(roots)
         table_data = [{
             'work_date': x.work_date.strftime('%Y-%m-%d'),
             'staff_name': x.staff.name,
