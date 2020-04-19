@@ -284,7 +284,7 @@ class WBSAdmin(DraggableMPTTAdmin):
 def set_index(parent: m.WBS):
     next_index = 1
     for child in parent.get_children().order_by('pk').all():
-        if child.is_root_node():
+        if child.is_root_node() or str(child.parent.code) == '0':
             child.code = f'{next_index}'
         else:
             child.code = f'{child.parent.code}.{next_index}'
