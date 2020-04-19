@@ -191,7 +191,7 @@ class Staff(TimeStampedModel):
 
 class HRCalendar(TimeStampedModel):
     class Meta:
-        verbose_name = verbose_name_plural = '资源日历'
+        verbose_name = verbose_name_plural = '人力资源投入记录'
         unique_together = ('project', 'work_date', 'staff')
 
     def __str__(self):
