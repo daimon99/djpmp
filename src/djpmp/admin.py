@@ -285,7 +285,7 @@ class WBSAdmin(DraggableMPTTAdmin):
         m.WBS.objects.rebuild()
         self.message_user(req, '任务树重建完成')
 
-    do_rebuild_tree = '重建树结构'
+    do_rebuild_tree.short_description = '重建树结构'
 
 
 def set_index(parent: m.WBS):
