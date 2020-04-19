@@ -251,7 +251,7 @@ class WBSAdmin(DraggableMPTTAdmin):
     def do_batch_update_code(self, request, qs):
         """批量生成code"""
         roots = qs.filter(parent__isnull=True).order_by('pk').all()
-        next_index = 1
+        next_index = 0
         for root in roots:
             root.code = f'{next_index}'
             root.save()
