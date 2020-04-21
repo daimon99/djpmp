@@ -9,6 +9,7 @@ from django.db.models import Sum
 from django.http import HttpResponseRedirect, HttpRequest
 from django.shortcuts import render
 from django.urls import reverse, path
+from django.utils.safestring import mark_safe
 from mptt.admin import DraggableMPTTAdmin
 from mptt.admin import TreeRelatedFieldListFilter
 
@@ -93,7 +94,7 @@ class ProjectAdmin(admin.ModelAdmin):
     class Media:
         js = [JQUERY_MIN_JS, 'admin/js/summary.js', 'admin/djpmp/project/project.js', ]
 
-    list_display = ('id', 'name', 'company', '_pm_name', 'status', 'pv_rmb', 'ev_rmb', 'ac_rmb', 'created',)
+    list_display = ('id', 'name', 'company', '_pm_name', 'status', 'pv_rmb', 'ev_rmb', 'ac_rmb', 'created', '操作')
     list_filter = ('status', 'created', 'modified')
     search_fields = ('name',)
     readonly_fields = ['pv_rmb', 'ev_rmb', 'ac_rmb']
@@ -111,6 +112,9 @@ class ProjectAdmin(admin.ModelAdmin):
         if not user.is_superuser:
             qs = get_user_projects(user)
         return qs
+
+    def 操作(self, obj):
+        return mark_safe(f'<a href="/static/app/self-report/index.html?pid={obj.pk}&token={obj.token}" target="_blank">自助填报</a>')
 
     def get_changeform_initial_data(self, request):
         init = super().get_changeform_initial_data(request)
