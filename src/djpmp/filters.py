@@ -54,3 +54,19 @@ class IsLeafFilter(admin.SimpleListFilter):
             print('--->')
             return queryset.filter(children__isnull=True)
 
+
+class EvFilter(admin.SimpleListFilter):
+    title = 'EV'
+    parameter_name = 'ev_tag'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('1', '大于0'),
+            ('2', '等于0')
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == '1':
+            return queryset.exclude(ev=0)
+        elif self.value() == '2':
+            return queryset.filter(ev=0)

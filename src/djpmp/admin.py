@@ -15,7 +15,7 @@ from mptt.admin import TreeRelatedFieldListFilter
 from . import forms
 from . import models as m
 from .biz import core
-from .filters import IsLeafFilter
+from .filters import IsLeafFilter, EvFilter
 from .models import Project, WBS, Staff, HRCalendar
 from .utils import JQUERY_MIN_JS
 
@@ -169,7 +169,7 @@ class WBSAdmin(DraggableMPTTAdmin):
     search_fields = ('name',)
     list_editable = ('pv',)
     ordering = ('tree_id', 'lft')
-    actions = ['do_batch_update_parent', 'do_batch_update_code', 'do_calc', 'do_pv_clear']
+    actions = ['do_batch_update_parent', 'do_batch_update_code', 'do_calc', 'do_pv_clear', 'do_rebuild_tree']
     readonly_fields = ['ev']
     exclude = ['pv_ymb', 'ev_ymb', 'ac_ymb']
     menu_index = 30
@@ -225,7 +225,7 @@ class WBSAdmin(DraggableMPTTAdmin):
         except:
             pass
 
-    def do_batch_update_parent(self, request:HttpRequest, qs):
+    def do_batch_update_parent(self, request: HttpRequest, qs):
         """批量更新父任务"""
         if 'apply' in request.POST:
             parent_id = request.POST.get('wbs_list')
@@ -251,11 +251,12 @@ class WBSAdmin(DraggableMPTTAdmin):
     def do_batch_update_code(self, request, qs):
         """批量生成code"""
         roots = qs.filter(parent__isnull=True).order_by('pk').all()
-        next_index = 1
+        # next_index = 0
         for root in roots:
-            root.code = f'{next_index}'
+            # root.code = f'{next_index}'
+            root.code = ""
             root.save()
-            next_index += 1
+            # next_index += 1
             set_index(root)
         self.message_user(request, '编码更新成功')
 
@@ -280,11 +281,17 @@ class WBSAdmin(DraggableMPTTAdmin):
     do_pv_clear.short_description = 'PV清零'
     do_pv_clear.allowed_permissions = ['change', ]
 
+    def do_rebuild_tree(self, req, qs):
+        m.WBS.objects.rebuild()
+        self.message_user(req, '任务树重建完成')
+
+    do_rebuild_tree.short_description = '重建树结构'
+
 
 def set_index(parent: m.WBS):
     next_index = 1
     for child in parent.get_children().order_by('pk').all():
-        if child.is_root_node():
+        if child.is_root_node() or str(child.parent.code) == '0' or str(child.parent.code) == '':
             child.code = f'{next_index}'
         else:
             child.code = f'{child.parent.code}.{next_index}'
@@ -323,16 +330,16 @@ class HRCalendarAdmin(admin.ModelAdmin):
         js = (JQUERY_MIN_JS, 'admin/js/summary.js', 'admin/djpmp/hrcalendar/hrcalendar.js')
 
     list_display = ('id', '_work_date', 'staff', 'ev', 'status', 'tasks_memo')
-    list_filter = ('project', 'work_date', 'staff')
+    list_filter = (EvFilter, 'project', 'work_date', 'staff')
     # raw_id_fields = ('tasks',)
-    list_editable = ('ev',)
+    # list_editable = ('ev',)
     filter_horizontal = ('tasks',)
     ordering = ('-work_date', 'staff')
     list_select_related = ['staff']
     readonly_fields = ['tasks_memo']
     list_display_links = ('id', '_work_date')
     menu_index = 40
-    actions = ['do_batch_assign_wbs', 'do_calc', 'do_batch_confirm']
+    actions = ['do_batch_assign_wbs', 'do_calc', 'do_batch_confirm', 'do_batch_update_memo']
 
     def get_queryset(self, request):
         user = request.user
@@ -439,6 +446,13 @@ class HRCalendarAdmin(admin.ModelAdmin):
             # 'form': form,
         }
         return render(request, 'admin/djpmp/hrcalendar/self-report.html', context=context)
+
+    def do_batch_update_memo(self, req, qs):
+        for i in qs:
+            i.save()
+        self.message_user(req, '更新任务说明成功')
+
+    do_batch_update_memo.short_description = '批量更新任务说明'
 
 
 @admin.register(m.Company)

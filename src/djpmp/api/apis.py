@@ -16,31 +16,6 @@ from .. import models as m
 log = logging.getLogger(__name__)
 
 
-#
-#
-# class ProjectApi(viewsets.ReadOnlyModelViewSet):
-#     queryset = m.Project.objects.all()
-#     serializer_class = ProjectSerializer
-#
-#
-# class ContractApi(viewsets.ReadOnlyModelViewSet):
-#     queryset = m.Contract.objects.all()
-#     serializer_class = ContractSerializer
-
-
-# class ToolsApi(viewsets.ViewSet):
-#     authentication_classes = ()
-#     permission_classes = ()
-#
-#     @action(['get'], detail=False)
-#     def hello(self, req: Request):
-#         """Sample code
-#         """
-#         with TimeIt() as timeit:
-#             code = 0
-#         telegraf.metric('hello', {'duration': timeit.duration}, {'code': code})
-#         return Response({'code': code, 'msg': 'success'})
-
 class HRCalendarApi(viewsets.ModelViewSet):
     queryset = m.HRCalendar.objects.all()
     serializer_class = serializers.HRCalendarSerializer
@@ -71,7 +46,7 @@ class SelfReportPermission(permissions.BasePermission):
             project = m.Project.objects.get(token=token, pk=pid)
             view.project = project
             return True
-        except m.Project.DoesNotExist:
+        except:
             return False
 
 
@@ -82,17 +57,26 @@ class SelfReportApi(viewsets.ViewSet):
     @action(['get'], detail=False)
     def get_init_data(self, req: Request):
         project = self.project
-        # roots = project.wbs_set.filter(project_id=pid, level=0).all()
-        # tasks = tree_for_nodes(roots)
-        tasks = [{'value': x.id, 'label': x._code_name(), 'level': x.level} for x in
-                 project.wbs_set.filter(project_id=project.id).all()]
+        roots = list(project.wbs_set.filter(project=project, level=0).all())
+        # tasks = [{'value': x.id, 'label': x._code_name(), 'level': x.level} for x in
+        #          project.wbs_set.filter(project_id=project.id).all()]
+        tasks = tree_for_nodes(roots)
+        table_data = [{
+            'work_date': x.work_date.strftime('%Y-%m-%d'),
+            'staff_name': x.staff.name,
+            'ev': x.ev,
+            'status': x.status,
+            'tasks_memo': x.tasks_memo} for x in project.hrcalendar_set.order_by('-staff', '-work_date').all()
+            if x.ev > 0
+        ]
         ret = {
             'code': 0,
             'msg': '返回项目初始信息成功',
             'company_name': project.company.name,
             'project_name': project.name,
             'staffs': [{'name': x.name, 'id': x.id} for x in project.company.staff_set.all()],
-            'tasks': tasks
+            'tasks': tasks,
+            'table_data': table_data
         }
         return Response(ret)
 
@@ -104,31 +88,31 @@ class SelfReportApi(viewsets.ViewSet):
                 'code': -1,
                 'msg': 'no form'
             })
-        """
-        {"pid":"1","token":"123","form":
-        {"company":"默认公司",
-        "project":"营区预警管理系统",
-        "staff":1,"work_date":"2020-03-31T16:00:00.000Z","tasks":[1,2,4]}}
-        """
         staff_id = form.get('staff_id')
         project_id = form.get('project_id')
         work_date = datetime.fromtimestamp(int(form.get('work_date')) / 1000)
         tasks = form.get('tasks')
         ev = form.get('ev')
-        print('form: ', form)
-        print(staff_id, project_id, work_date, tasks)
-        record = m.HRCalendar.objects.create(
-            project_id=project_id,
-            work_date=work_date,
-            staff_id=staff_id,
-            ev=ev
-        )
+        try:
+            record = m.HRCalendar.objects.get(project_id=project_id, work_date=work_date, staff_id=staff_id)
+            if record.status == '已确认':
+                return Response({
+                    'code': -2,
+                    'msg': f'{record.staff.name} 在 {record.work_date.strftime("%Y-%m-%d")}的工作量已经被确认，无法再调整。'
+                })
+            record.ev = ev
+        except m.HRCalendar.DoesNotExist:
+            record = m.HRCalendar.objects.create(
+                project_id=project_id,
+                work_date=work_date,
+                staff_id=staff_id,
+                ev=ev
+            )
         record.tasks.set(tasks)
         record.save()  # 重新计算 hrcalendar 的tasks_memo 值
         return Response({
             'code': 0,
             'msg': '成功',
-
         })
 
 
