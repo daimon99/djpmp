@@ -219,6 +219,7 @@
                         this.form.work_date = form.work_date
                         this.form.ev = form.ev
                     }
+                    document.title = `${form.project_name}-工作量自助填报`
                 }).catch(res => {
                     this.msg = '非法访问，请核实后再访问！'
                     this.showForm = false
