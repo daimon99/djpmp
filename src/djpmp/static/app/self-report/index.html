@@ -166,6 +166,7 @@
                     this.form.work_date = form.work_date
                     this.form.ev = form.ev
                 }
+                document.title = `${data.project_name}-工作量报告`
             }).catch(res => {
                 this.msg = '非法访问，请核实后再访问！'
                 this.showForm = false
