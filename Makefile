@@ -53,7 +53,7 @@ docker-release: test docker-test ## merge master to docker
 # 	git merge master
 # 	git checkout master
 
-release: docker-release # 发布到生产环境
+release: # 发布到生产环境
 	docker push ccr.ccs.tencentyun.com/tjhb/djpmp:latest
 	git push --all
 
@@ -74,6 +74,10 @@ pdf: ## 构建 pdf 文档
 
 doc-clean: ## 清理 doc 构建数据
 	cd docs && make clean
+
+build: test ## build
+	- git add . ; git commit -am 'update';
+	- git push
 
 %:  ## cli命令
 	env/bin/python "cli.py" $(MAKECMDGOALS)
