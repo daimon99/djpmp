@@ -54,6 +54,7 @@ docker-release: test docker-test ## merge master to docker
 # 	git checkout master
 
 release: # 发布到生产环境
+	git pull
 	docker push ccr.ccs.tencentyun.com/tjhb/djpmp:latest
 	- git push --all
 
